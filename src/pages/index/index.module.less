@@ -1,0 +1,275 @@
+.posterPreview {
+  width: 100%;
+  height: 100vh;
+  padding-bottom: constant(safe-area-inset-bottom); /* 兼容 IOS<11.2 */
+  padding-bottom: env(safe-area-inset-bottom); /* 兼容 IOS>11.2 */
+  background: rgba(248, 248, 248, 1);
+
+  .posterWrap {
+    position: relative;
+    box-sizing: border-box;
+    width: 534px;
+    height: 950px;
+    margin: auto;
+    margin: 30px auto 50px;
+    padding: 22px;
+
+    .posterContent {
+      width: 100%;
+      height: 100%;
+      background: #fff;
+
+      .carPic {
+        width: 100%;
+        height: 356px;
+      }
+
+      // 邀请人
+      .mask {
+        position: absolute;
+        top: 309px;
+        left: 22px;
+        width: 490px;
+        height: 70px;
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, #fff 100%);
+      }
+
+      .recommend {
+        box-sizing: border-box;
+        width: 100%;
+        padding: 0 25px 10px;
+        color: #1e63ed;
+        font-weight: 400;
+        font-size: 23px;
+        font-family: PingFangSC-Regular, PingFang SC;
+        line-height: 32px;
+        background: #fff;
+      }
+
+      .specName {
+        width: 440px;
+        margin-bottom: 12px;
+        margin-left: 25px;
+        color: rgba(0, 0, 0, 0.9);
+        font-weight: 500;
+        font-size: 34px;
+        font-family: PingFangSC-Medium, PingFang SC;
+        line-height: 48px;
+      }
+
+      // 车辆价格
+      .price {
+        width: 100%;
+        height: 54px;
+        margin-bottom: 25px;
+        margin-left: 25px;
+        color: #ff2322;
+        font-weight: 600;
+        font-size: 38px;
+        font-family: PingFangSC-Semibold, PingFang SC;
+        line-height: 54px;
+
+        .sellPrice {
+          display: inline-block;
+          margin-right: 18px;
+
+          .unit {
+            display: inline-block;
+            color: #ff2322;
+            font-weight: 600;
+            font-size: 20px;
+            font-family: PingFangSC-Semibold, PingFang SC;
+            line-height: 20px;
+          }
+        }
+
+        .guidePrice {
+          color: rgba(0, 0, 0, 0.6);
+          font-weight: 400;
+          font-size: 20px;
+          font-family: PingFangSC-Regular, PingFang SC;
+          line-height: 28px;
+        }
+      }
+
+      // 公司信息
+      .companyWrap {
+        box-sizing: border-box;
+        width: 448px;
+        margin-bottom: 20px;
+        margin-left: 21px;
+        padding: 30px 25px;
+        border: 1px solid rgba(30, 99, 237, 0.3);
+
+        .carInfo {
+          width: 404px;
+
+          .color {
+            height: 26px;
+            padding-bottom: 12px;
+            color: rgba(0, 0, 0, 0.6);
+            font-weight: 400;
+            font-size: 20px;
+            font-family: PingFangSC-Regular, PingFang SC;
+            line-height: 26px;
+          }
+        }
+
+        .pageQrcodeWrap {
+          width: 108px;
+          height: 22px;
+          margin-left: 15px;
+          color: rgba(0, 0, 0, 0.3);
+          font-weight: 400;
+          font-size: 16px;
+          line-height: 22px;
+          text-align: center;
+
+          .pageQrcode {
+            width: 108px;
+            height: 108px;
+            margin-bottom: 4px;
+          }
+        }
+      }
+
+      .contactWrap {
+        &.noRemark {
+          padding-top: 50px;
+        }
+
+        padding-left: 87px;
+
+        .contactQrcode {
+          width: 80px;
+          height: 80px;
+          margin-right: 21px;
+          padding: 4px;
+          border: 1px solid #4069f6;
+        }
+
+        .contactCon {
+          padding-top: 5px;
+          text-align: left;
+
+          .contactName {
+            width: 100%;
+            color: #1e63ed;
+            font-weight: 400;
+            font-size: 17px;
+            font-family: PingFangSC-Regular, PingFang SC;
+            line-height: 24px;
+          }
+
+          .contactPhone {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            width: 100%;
+            height: 34px;
+            margin-top: 6px;
+            color: #4069f6;
+            font-weight: bold;
+            font-size: 24px;
+            font-family: PingFangSC-Semibold, PingFang SC;
+            line-height: 34px;
+
+            .phoneIcon {
+              width: 20px;
+              height: 20px;
+              margin-right: 8px;
+            }
+          }
+
+          &.noQrcode {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            width: 320px;
+            padding-top: 20px;
+            text-align: center;
+
+            .contactName {
+              text-align: center;
+            }
+
+            .contactPhone {
+              justify-content: center;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // 底部按钮
+  .btnBox {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    z-index: 500;
+    box-sizing: border-box;
+    width: 100%;
+    padding: 27px 30px;
+    padding-bottom: calc(27px + constant(safe-area-inset-bottom)); /* 兼容 IOS<11.2 */
+    padding-bottom: calc(27px + env(safe-area-inset-bottom)); /* 兼容 IOS>11.2 */
+    background: #fff;
+
+    .saveBtn {
+      width: 690px;
+      height:90px;
+      font-size: 30px;
+      color: #fff;
+      background: linear-gradient(213deg, #5495FF 0%, #2F5CF5 100%);
+    }
+
+    .btnWrap {
+      display: flex;
+      justify-content: space-around;
+      width: 690px;
+      margin: 0 auto;
+      margin-bottom: 20px;
+
+      .bgItem {
+        position: relative;
+        width: 66px;
+        height: 66px;
+        border-radius: 33px;
+
+        .selected {
+          position: absolute;
+          top: -5px;
+          right: -5px;
+          width: 30px;
+          height: 30px;
+          border-radius: 15px;
+        }
+      }
+    }
+  }
+
+  .itemBlue {
+    background: linear-gradient(136deg, #8454ff 0%, #005fff 100%);
+  }
+
+  .itemGreen {
+    background: linear-gradient(180deg, rgba(180, 236, 81, 1) 0%, rgba(66, 147, 33, 1) 100%);
+  }
+
+  .itemPurple {
+    background: linear-gradient(135deg, rgba(48, 35, 174, 1) 0%, rgba(200, 109, 215, 1) 100%);
+  }
+
+  .itemRed {
+    background: linear-gradient(0deg, #f7a21c 0%, #ff023f 100%);
+  }
+
+  .tempCanvas {
+    position: absolute;
+    top: -10000px;
+    left: 0;
+    width: 750px;
+    height: 1000px;
+  }
+}
