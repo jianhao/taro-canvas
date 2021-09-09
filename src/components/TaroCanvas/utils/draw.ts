@@ -38,7 +38,7 @@ export function _drawRadiusRect (drawData, drawOptions) {
  */
 export function _getTextWidth (text, drawOptions) {
   const { ctx, toPx, toRpx } = drawOptions
-  let texts = []
+  let texts: any[] = []
   if (Object.prototype.toString.call(text) === '[object Object]') {
     texts.push(text)
   } else {
@@ -46,9 +46,9 @@ export function _getTextWidth (text, drawOptions) {
   }
   let width = 0
   // eslint-disable-next-line no-shadow
-  texts.forEach(({ fontSize, text, marginLeft = 0, marginRight = 0 }) => {
+  texts.forEach(({ fontSize, text: textStr, marginLeft = 0, marginRight = 0 }) => {
     ctx.setFontSize(toPx(fontSize))
-    width += ctx.measureText(text).width + marginLeft + marginRight
+    width += ctx.measureText(textStr).width + marginLeft + marginRight
   })
   return toRpx(width)
 }
@@ -104,7 +104,7 @@ export function _drawSingleText (drawData, drawOptions) {
   ctx.textBaseline = baseLine
   ctx.textAlign = textAlign
   let textWidth = ctx.measureText(text).width // 测量文本宽度
-  const textArr = []
+  const textArr: string[] = []
   // 文本宽度 大于 渲染宽度
   if (textWidth > width) { // 如果超出一行 ，则判断要分为几行
     let fillText = ''
@@ -359,7 +359,7 @@ export function drawBlock (data, drawOptions) {
  * @param { function } drawOptions.toPx - toPx方法
  * @param { function } drawOptions.toRpx - toRpx方法
  */
-export const drawImage = (data, drawOptions) => new Promise(resolve => {
+export const drawImage = (data, drawOptions) => new Promise<void>(resolve => {
   const { canvas, ctx, toPx } = drawOptions
   const {
     x,

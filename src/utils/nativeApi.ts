@@ -1,4 +1,6 @@
 
+import Taro from '@tarojs/taro'
+
 type AuthSetting = 'scope.address' | 'scope.camera' | 'scope.invoice' | 'scope.invoiceTitle' | 'scope.record' | 'scope.userInfo' | 'scope.userLocation' | 'scope.werun' | 'scope.writePhotosAlbum'
 
 /** 查询用户是否有授权

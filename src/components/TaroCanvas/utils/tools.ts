@@ -42,7 +42,7 @@ export function getHeight (config) {
     }
     return height
   }
-  const heightArr = [];
+  const heightArr: number[] = [];
   (config.blocks || []).forEach(item => {
     heightArr.push(item.y + item.height)
   });
@@ -111,7 +111,7 @@ export const getFactor = () => {
  * @param { number } factor - 转化因子
  * @returns { number }
  */
-export const toPx = (rpx, factor = getFactor()) => parseInt(rpx * factor, 10)
+export const toPx = (rpx, factor = getFactor()) => parseInt(String(rpx * factor), 10)
 
 /**
  * @description px => rpx
@@ -119,7 +119,7 @@ export const toPx = (rpx, factor = getFactor()) => parseInt(rpx * factor, 10)
  * @param { number } factor - 转化因子
  * @returns { number }
  */
-export const toRpx = (px, factor = getFactor()) => parseInt(px / factor, 10)
+export const toRpx = (px, factor = getFactor()) => parseInt(String(px / factor), 10)
 
 /**
  * 下载图片资源
@@ -177,7 +177,7 @@ export function getImageInfo (imgPath) {
 */
 export const downloadImageAndInfo = (item, index) => new Promise((resolve, reject) => {
   const { x, y, url, zIndex } = item
-  downImage(url, index).then(imgPath => getImageInfo(imgPath, index)
+  downImage(url).then(imgPath => getImageInfo(imgPath)
     .then(({ imgInfo }) => { // 获取图片信息
     // 根据画布的宽高计算出图片绘制的大小，这里会保证图片绘制不变形， 即宽高比不变，截取再拉伸
       let sx

@@ -234,26 +234,8 @@ const defaultConfig = {
       y: 30,
       width: 690,
       height: 500,
-      url: 'https://img.maihaoche.com/raboot/assets/demoCar.png',
+      url: 'http://img.jianhunxia.com/imgs/ChMkJ1gi9H-IcjFjAAYz8EtaA9IAAXm5gOMcEUABjQI228.jpg',
       zIndex: 20,
-    },
-    {
-      x: 65,
-      y: 63,
-      width: 24,
-      height: 24,
-      // url: locationIcon,
-      url: '',
-      zIndex: 50,
-    },
-    // 页面二维码
-    {
-      x: 533,
-      y: 880,
-      width: 134,
-      height: 134,
-      // url: 'https://img.maihaoche.com/raboot/grrX2UAPp3oP293516a52a92e10aca5984b2488389c4.jpeg',
-      zIndex: 50,
     },
     // 个人二维码
     {
@@ -261,7 +243,7 @@ const defaultConfig = {
       y: 1130,
       width: 114,
       height: 114,
-      // url: 'https://img.maihaoche.com/raboot/grrX2UAPp3oP293516a52a92e10aca5984b2488389c4.jpeg',
+      url: 'http://pic.jianhunxia.com/imgs/20210909154455.jpeg',
       zIndex: 50,
     },
   ],
@@ -312,11 +294,12 @@ function Index () {
   })
 
   // 调用绘画 显示 canvas 组件、同时设置 config
-  const canvasDraw = async () => {
+  const beginDraw = async () => {
     if (crawLoading) return
     setCrawLoading(true)
     setTempImgs([]) // 先清空一波图片缓存
     const newConfig = cloneDeep(defaultConfig)
+    newConfig.backgroundColor = currentColor.color
 
     setCanvasStatus(true)
     setConfig(newConfig)
@@ -327,15 +310,15 @@ function Index () {
 
   // 绘制后保存图片
   const saveImg = useCallback(async () => {
-    Taro.hideLoading()
     setCrawLoading(false)
+    return
     const hasAuth = await queryAuth('scope.writePhotosAlbum')
+    console.log('有没有权限保存图片', hasAuth);
     if (hasAuth) {
       console.log('缓存图片', tempImgs)
       const taskList = tempImgs.map((url, index) => saveImgAlbum(url, index + 1)) // 添加保存图片的任务
       await Promise.all(taskList)
-      setTempImgs([]) // 清空图片缓存
-      Taro.showToast({ icon: 'none', title: '海报和车辆二维码已保存到手机' })
+      Taro.showToast({ icon: 'none', title: '海报已保存到手机' })
     } else { // 如果拒绝授权相册, 引导用户去授权
       Taro.showToast({ icon: 'none', title: '请授权小程序获取相册权限' })
     }
@@ -343,7 +326,7 @@ function Index () {
   }, [tempImgs])
 
   useEffect(() => {
-    if (tempImgs.length > 1) {
+    if (tempImgs?.length > 0) {
       saveImg()
     }
   }, [saveImg, tempImgs])
@@ -357,13 +340,14 @@ function Index () {
 
   // 海报绘制成功
   const onCreateSuccess = (result) => {
+    console.log('绘制好了', result);
     const { tempFilePath, errMsg } = result
     let msg = '绘制失败'
-
     setCanvasStatus(false)
     setConfig({})
     msg = '海报绘制出现错误'
     if (errMsg === 'canvasToTempFilePath:ok') {
+      console.log('没有成功么', [...tempImgs, tempFilePath]);
       setTempImgs([...tempImgs, tempFilePath])
     } else {
       onCreateFail(msg)
@@ -372,6 +356,11 @@ function Index () {
 
   return (
     <View className={styles.posterPreview}>
+      <Image
+        src={tempImgs[0]}
+        className={styles.posterImg}
+        mode='widthFix'
+      />
       {/* 底部按钮 */}
       <View className={styles.btnBox}>
         <View className={styles.btnWrap}>
@@ -389,12 +378,13 @@ function Index () {
             ))
           }
         </View>
-        <Button className={styles.saveBtn} onClick={canvasDraw}>保存图片</Button>
+        <Button className={styles.saveBtn} onClick={beginDraw}>绘制海报</Button>
       </View>
 
       { // 由于小程序限制，目前组件通过状态的方式来动态加载
         canvasStatus && (
           <TaroCanvas
+            // debug
             config={config} // 绘制配置
             onCreateSuccess={onCreateSuccess} // 绘制成功回调
             onCreateFail={onCreateFail} // 绘制失败回调
@@ -413,7 +403,7 @@ function Index () {
 }
 
 Index.config = {
-  navigationBarTitleText: '海报推广',
+  navigationBarTitleText: '绘制海报',
 }
 
 export default Index

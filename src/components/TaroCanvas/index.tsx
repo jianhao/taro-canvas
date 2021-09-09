@@ -2,31 +2,17 @@
 /* eslint-disable no-unused-expressions */
 /* eslint-disable react/forbid-prop-types */
 import Taro from '@tarojs/taro'
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { Canvas } from '@tarojs/components'
-import {
-  toPx,
-  toRpx,
-  getRandomId,
-  getHeight,
-  downloadImageAndInfo,
-  getLinearColor,
-  getImageInfo,
-} from './utils/tools'
-import {
-  drawImage,
-  drawText,
-  drawBlock,
-  drawLine,
-} from './utils/draw'
+import { Image } from '@/typings/taroCanvas'
+import { drawImage, drawText, drawBlock, drawLine } from './utils/draw'
+import {toPx, toRpx, getRandomId, downloadImageAndInfo, getLinearColor, getImageInfo } from './utils/tools'
 import './index.css'
 
 interface Props {
   config?: any
-  width?: string
-  height?: string
   debug?: boolean
-  noTaroToast?: boolean
+  showLoading?: boolean
   onCreateSuccess?: (result: any) => void
   onCreateFail?: (result: any) => void
 }
@@ -34,70 +20,71 @@ interface Props {
 let count = 1
 const canvasId = getRandomId() // 唯一id
 
+
 const CanvasDrawer: React.FC<Props> = ({
     config,
-    width = 300,
-    height = 500,
     debug,
-    noTaroToast,
+    showLoading,
     onCreateSuccess,
     onCreateFail,
   }) => {
-  const [drawArr, setDrawArr] = useState<any>(null)
+  const {
+    width,
+    height,
+    backgroundColor,
+    texts = [],
+    blocks = [],
+    lines = [],
+  } = config || {}
 
   /**
-   * @description 获取图片参数
-   * @param  {} images=[]
+   * step1: 初始化图片资源
+   * @param  {Array} images = imgTask
+   * @return {Promise} downloadImagePromise
    */
-  const getImagesParameter = images => {
+  const initImages = (images: Image[]) => {
     const imagesTemp = images.filter(item => item.url)
-    console.log('获取图片参数', imagesTemp)
     const drawList = imagesTemp.map((item, index) => downloadImageAndInfo(item, index))
-    console.log('绘图任务1', drawList)
     return Promise.all(drawList)
   }
 
   /**
-   * @description 初始化 canvas
-   * @param  {} w
-   * @param  {} h
-   * @param  {} debug
+   * step2: 初始化 canvas && 获取其 dom 节点和实例
+   * @return {Promise} resolve 里返回其 dom 和实例
    */
   const initCanvas = () => new Promise<any>(resolve => {
     setTimeout(() => {
-      const query = Taro.createSelectorQuery().in(CanvasDrawer)
-      query.select(`#${canvasId}`).fields({ node: true, size: true }).exec(res => {
-        const canvas = res[0].node
+      const pageInstance = Taro.getCurrentInstance()?.page || {} // 拿到当前页面实例
+      const query = Taro.createSelectorQuery().in(pageInstance) // 确定在当前页面内匹配子元素
+      query.select(`#${canvasId}`).fields({ node: true, size: true, context: true }, res => {
+        const canvas = res.node
         const ctx = canvas.getContext('2d')
         resolve({ ctx, canvas })
-      })
+      }).exec()
     }, 300)
   })
 
-  /**
-   * @description 初始化 canvas实例 && 下载图片资源
-   * @param  { boolean }
-   */
-  const onCreate = () => {
-
-    if (!noTaroToast) Taro.showLoading({ mask: true, title: '生成中...' })
-    if (config.images && config.images.length) {
-      getImagesParameter(config.images).then(result => { // 1. 下载图片资源
-        setDrawArr(result) // 将处理好的图片放进待绘制数组中
-        create()
+  // start: 初始化 canvas 实例 && 下载图片资源
+  const init = () => {
+    if (showLoading) Taro.showLoading({ mask: true, title: '生成中...' })
+    if (config?.images?.length) {
+      initImages(config.images).then(result => { // 1. 下载图片资源
+        console.log('图片资源', result);
+        startDrawing(result)
       }).catch(err => {
         Taro.hideLoading()
         Taro.showToast({ icon: 'none', title: err.errMsg || '下载图片失败' })
         onCreateFail && onCreateFail(err)
       })
     } else {
-      create()
+      startDrawing([])
     }
   }
 
   useEffect(() => {
-    onCreate()
-  })
+    init()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
     /**
    * @description 保存绘制的图片
@@ -107,7 +94,9 @@ const CanvasDrawer: React.FC<Props> = ({
       Taro.canvasToTempFilePath({
         canvas,
         success: result => {
+          console.log('成功获取图片资源', result);
           getImageInfo(result.tempFilePath)
+          Taro.hideLoading()
           if (!onCreateSuccess)console.warn('缺少必传参数 onCreateSuccess')
           onCreateSuccess && onCreateSuccess(result)
         },
@@ -130,17 +119,17 @@ const CanvasDrawer: React.FC<Props> = ({
     }
 
   /**
-   * @description 开始绘制
-   * @param  { object } config
+   * step2: 开始绘制任务
+   * @param  { Array } drawTasks 待绘制任务
    */
-  const create = async () => {
-    const configHeight = getHeight(config)
-    const canvasObj = await initCanvas()
-    const { ctx, canvas } = canvasObj || {}
-    const {  backgroundColor, texts = [], blocks = [], lines = [] } = config
+  const startDrawing = async (drawTasks) => {
+    // TODO: check
+    // const configHeight = getHeight(config)
+    const { ctx, canvas } = await initCanvas()
 
-    canvas.width = config?.width
-    canvas.height = configHeight
+    canvas.width = width
+    canvas.height = height
+
     // 设置画布底色
     if (backgroundColor) {
       ctx.save() // 保存绘图上下文
@@ -150,7 +139,7 @@ const CanvasDrawer: React.FC<Props> = ({
       ctx.restore() // 恢复之前保存的绘图上下文
     }
      // 将要画的方块、文字、线条放进队列数组
-    const queue = drawArr.concat(texts.map(item => {
+    const queue = drawTasks.concat(texts.map(item => {
         item.type = 'text'
         item.zIndex = item.zIndex || 0
         return item
@@ -165,6 +154,7 @@ const CanvasDrawer: React.FC<Props> = ({
         item.zIndex = item.zIndex || 0
         return item
       }))
+      console.log('待绘制任务', drawTasks);
 
     queue.sort((a, b) => a.zIndex - b.zIndex) // 按照层叠顺序由低至高排序
     for (let i = 0; i < queue.length; i++) {
@@ -184,33 +174,23 @@ const CanvasDrawer: React.FC<Props> = ({
         drawLine(queue[i], drawOptions)
       }
     }
+    console.log('绘制完毕');
 
     setTimeout(() => {
       getTempFile(canvas) // 需要做延时才能能正常加载图片
     }, 300)
   }
 
-  const pxHeight = height || 500
-  const pxWidth = width || 300
 
-  return pxWidth && pxHeight ? (
+
+  return (
     <Canvas
       type='2d'
       id={canvasId}
-      style={`width:${pxWidth}px; height:${pxHeight}px;`}
+      style={`width:${width}px; height:${height}px;`}
       className={`${debug ? 'debug' : 'pro'} canvas`}
     />
-  ) : null
+  )
 }
 
 export default CanvasDrawer
-
-// CanvasDrawer.defaultProps = {
-//   config: {},
-// }
-
-// CanvasDrawer.propTypes = {
-//   config: PropTypes.object,
-//   onCreateSuccess: PropTypes.func.isRequired,
-//   onCreateFail: PropTypes.func.isRequired,
-// }
