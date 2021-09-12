@@ -1,5 +1,5 @@
 /* eslint-disable no-underscore-dangle */
-import { getLinearColor, getTextX } from './tools'
+import { getLinearColor, getTextX, toPx } from './tools'
 
 /**
   * 绘制圆角矩形
@@ -12,19 +12,18 @@ import { getLinearColor, getTextX } from './tools'
   * @param { object } drawOptions - 绘制对象
   * @param { object } drawOptions.ctx - ctx对象
   * @description arcTo 比 arc 更加简洁，三点画弧，但是比较难理解 参考资料：http://www.yanghuiqing.com/web/346
+  * ctx.arc(x, y, radius, startAngle, endAngle, anticlockwise(是否逆时针画弧))
+  * ctx.arcTo(x1, y1, x2, y2, radius); // 当前点-x1点 画切线 x1点到x2点画切线， 用半径为radius的圆弧替换掉切线部分
   */
-export function _drawRadiusRect (drawData, drawOptions) {
-  const { x, y, w, h } = drawData
-  let { r } = drawData
-  const { ctx } = drawOptions
+export function _drawRadiusRect ( { x, y, w, h, r }, { ctx }) {
   const minSize = Math.min(w, h)
   if (r > minSize / 2) r = minSize / 2
   ctx.beginPath()
   ctx.moveTo(x + r, y)
-  ctx.arcTo(x + w, y, x + w, y + h, r) // 绘制当前端点、端点1、端点2三点形成的两条切线与半径r的圆相切的小圆弧
-  ctx.arcTo(x + w, y + h, x, y + h, r)
-  ctx.arcTo(x, y + h, x, y, r)
-  ctx.arcTo(x, y, x + w, y, r)
+  ctx.arcTo(x + w, y, x + w, y + h, r) // 绘制上边框和右上角弧线
+  ctx.arcTo(x + w, y + h, x, y + h, r) // 绘制右边框和右下角弧线
+  ctx.arcTo(x, y + h, x, y, r) // 绘制下边框和左下角弧线
+  ctx.arcTo(x, y, x + w, y, r) // 绘制左边框和左上角弧线
   ctx.closePath()
 }
 
@@ -33,11 +32,9 @@ export function _drawRadiusRect (drawData, drawOptions) {
  * @param { Array | Object } text 数组 或者 对象
  * @param { object } drawOptions - 绘制对象
  * @param { object } drawOptions.ctx - ctx对象
- * @param { function } drawOptions.toPx - toPx方法
- * @param { function } drawOptions.toRpx - toRpx方法
  */
 export function _getTextWidth (text, drawOptions) {
-  const { ctx, toPx, toRpx } = drawOptions
+  const { ctx } = drawOptions
   let texts: any[] = []
   if (Object.prototype.toString.call(text) === '[object Object]') {
     texts.push(text)
@@ -45,12 +42,19 @@ export function _getTextWidth (text, drawOptions) {
     texts = text
   }
   let width = 0
-  // eslint-disable-next-line no-shadow
-  texts.forEach(({ fontSize, text: textStr, marginLeft = 0, marginRight = 0 }) => {
-    ctx.setFontSize(toPx(fontSize))
+  texts.forEach(({
+    fontSize,
+    text: textStr,
+    fontStyle = 'normal',
+    fontWeight = 'normal',
+    fontFamily = 'sans-serif',
+    marginLeft = 0,
+    marginRight = 0
+  }) => {
+    ctx.font = `${fontStyle} ${fontWeight} ${fontSize}px ${fontFamily}`
     width += ctx.measureText(textStr).width + marginLeft + marginRight
   })
-  return toRpx(width)
+  return width
 }
 
 /**
@@ -74,8 +78,6 @@ export function _getTextWidth (text, drawOptions) {
   *
   * @param { object } drawOptions - 绘制对象
   * @param { object } drawOptions.ctx - ctx对象
-  * @param { function } drawOptions.toPx - toPx方法
-  * @param { function } drawOptions.toRpx - toRpx方法
   */
 export function _drawSingleText (drawData, drawOptions) {
   const {
@@ -95,7 +97,8 @@ export function _drawSingleText (drawData, drawOptions) {
     fontStyle = 'normal',
     fontFamily = 'sans-serif',
   } = drawData
-  const { ctx, toPx } = drawOptions
+  const { ctx } = drawOptions
+  // 画笔初始化
   ctx.save()
   ctx.beginPath()
   ctx.font = `${fontStyle} ${fontWeight} ${fontSize}px ${fontFamily}`
@@ -105,28 +108,33 @@ export function _drawSingleText (drawData, drawOptions) {
   ctx.textAlign = textAlign
   let textWidth = ctx.measureText(text).width // 测量文本宽度
   const textArr: string[] = []
-  // 文本宽度 大于 渲染宽度
+
+
+  // 文本超出换行
   if (textWidth > width) { // 如果超出一行 ，则判断要分为几行
-    let fillText = ''
-    let line = 1
+    let fillText = '' // 当前行已拼接的文字
+    let line = 1 // 当前是第几行
     for (let i = 0; i <= text.length - 1; i++) { // 将文字转为数组，一行文字一个元素
-      fillText += text[i]
-      const nextText = (i + 1) <= text.length ? fillText + text[i + 1] : fillText
-      if (ctx.measureText(nextText).width >= width) { // 如果到了当前这个字超出宽度则添加换行或者省略号
-        if (line === lineNum) {
-          if (i !== text.length - 1) {
-            fillText = `${fillText.substring(0, fillText.length - 1)}...`
+      fillText += text[i] // 当前已拼接文字串
+      const nextText = i < text.length - 1 ? fillText + text[i + 1] : fillText // 再拼接下一个文字
+      const restWidth = width - ctx.measureText(nextText).width // 拼接下一个文字后的剩余宽度
+
+      if (restWidth < 0) { // 如果拼接下一个字就超出宽度则添加者省略号或者换行
+        if (line === lineNum) { // 已经是最后一行，就拼接省略号
+          if (restWidth + ctx.measureText(text[i + 1]).width > ctx.measureText('...').width ) { // 剩余宽度能否放下省略号
+            fillText = `${fillText}...`
+          } else {
+            fillText = `${fillText.substr(0, fillText.length - 1)}...`
           }
-        }
-        if (line <= lineNum) {
           textArr.push(fillText)
-        }
-        line++
-        fillText = ''
-      } else if (line <= lineNum) {
-        if (i === text.length - 1) {
+          break
+        } else {  // 如果不是最后一行，就换行
           textArr.push(fillText)
+          line++
+          fillText = ''
         }
+      } else if (i === text.length - 1){
+        textArr.push(fillText)
       }
     }
     textWidth = width
@@ -134,18 +142,25 @@ export function _drawSingleText (drawData, drawOptions) {
     textArr.push(text)
   }
 
-  textArr.forEach((item, index) => ctx.fillText(item,
-    getTextX(textAlign, x, width), y + (lineHeight || fontSize) * index))
+  // 按行渲染文字
+  textArr.forEach((item, index) =>
+    ctx.fillText(
+      item,
+      getTextX(textAlign, x, width), // 根据文本对齐方式和宽度确定 x 坐标
+      y + (lineHeight || fontSize) * index // 根据行数、行高 || 字体大小确定 y 坐标
+    )
+  )
   ctx.restore()
-  // textDecoration
+
+  // 文本修饰，下划线、删除线什么的
   if (textDecoration !== 'none') {
     let lineY = y
     if (textDecoration === 'line-through') { // 目前只支持贯穿线
       lineY = y
     }
     ctx.save()
-    ctx.moveTo(toPx(x), toPx(lineY))
-    ctx.lineTo(toPx(x) + toPx(textWidth), toPx(lineY))
+    ctx.moveTo(x, lineY)
+    ctx.lineTo(x + textWidth, lineY)
     ctx.strokeStyle = color
     ctx.stroke()
     ctx.restore()
@@ -174,32 +189,26 @@ export function _drawSingleText (drawData, drawOptions) {
  *
  * @param { object } drawOptions - 绘制对象
  * @param { object } drawOptions.ctx - ctx对象
- * @param { function } drawOptions.toPx - toPx方法
- * @param { function } drawOptions.toRpx - toRpx方法
  */
 export function drawText (params, drawOptions) {
-  // const { ctx, toPx, toRpx } = drawOptions;
   const {
-    x,
-    y,
+    x = 0,
+    y = 0,
     text,
     baseLine,
-    // fontSize,
-    // color,
-    // textAlign,
-    // opacity = 1,
-    // width,
-    // lineNum,
-    // lineHeight
   } = params
   if (Object.prototype.toString.call(text) === '[object Array]') {
     const preText = { x, y, baseLine }
+
+    // 遍历多行文字，一行一行渲染
     text.forEach(item => {
-      preText.x += item.marginLeft || 0
-      const textWidth = _drawSingleText(Object.assign(item, {
-        ...preText,
-      }), drawOptions)
-      preText.x += textWidth + (item.marginRight || 0) // 下一段字的 x 轴为上一段字 x + 上一段字宽度
+      preText.x += (item.marginLeft || 0)
+      // TODO:多段文字超出一行的处理
+      const textWidth = _drawSingleText(
+        Object.assign( item, {...preText, y: y + (item.marginTop || 0)}),
+        drawOptions
+      )
+      preText.x += textWidth + (item.marginRight || 0) // 下一段文字的 x 坐标为上一段字 x坐标 + 文字宽度 + marginRight
     })
   } else {
     _drawSingleText(params, drawOptions)
@@ -217,8 +226,6 @@ export function drawText (params, drawOptions) {
  *
  * @param { object } drawOptions - 绘制对象
  * @param { object } drawOptions.ctx - ctx对象
- * @param { function } drawOptions.toPx - toPx方法
- * @param { function } drawOptions.toRpx - toRpx方法
  */
 export function drawLine (drawData, drawOptions) {
   const { startX, startY, endX, endY, color, width } = drawData
@@ -252,8 +259,6 @@ export function drawLine (drawData, drawOptions) {
 *
 * @param { object } drawOptions - 绘制对象
 * @param { object } drawOptions.ctx - ctx对象
-* @param { function } drawOptions.toPx - toPx方法
-* @param { function } drawOptions.toRpx - toRpx方法
 */
 export function drawBlock (data, drawOptions) {
   const {
@@ -271,96 +276,85 @@ export function drawBlock (data, drawOptions) {
     borderRadius = 0,
   } = data || {}
   const { ctx } = drawOptions
+  ctx.save() // 先保存画笔样式，等下恢复回来
+  ctx.globalAlpha = opacity
+
   let blockWidth = 0 // 块的宽度
   let textX = 0
   let textY = 0
 
-  // 判断是否块内有文字
-  if (typeof text !== 'undefined') {
-    // 如果有文字并且块的宽度小于文字宽度，块的宽度为 文字的宽度 + 内边距
+  // 渲染块内文字
+  if (text) {
+    // 如果文字宽度超出块宽度，则块的宽度为：文字的宽度 + 内边距
     const textWidth = _getTextWidth(typeof text.text === 'string' ? text : text.text, drawOptions)
     blockWidth = textWidth > width ? textWidth : width
     blockWidth += paddingLeft + paddingLeft
 
-    const {
-      textAlign = 'left',
-      // text: textCon,
-    } = text
-    textY = height / 2 + y // 文字的y轴坐标在块中线
-    if (textAlign === 'left') {
-      // 如果是右对齐，那x轴在块的最左边
-      textX = x + paddingLeft
-    } else if (textAlign === 'center') {
+    const { textAlign = 'left' } = text
+    textY = y // 文字默认定位在块的左上角
+    textX = x + paddingLeft
+
+    // 文字居中
+    if (textAlign === 'center') {
       textX = blockWidth / 2 + x
-    } else {
+    } else if(textAlign === 'right') {
       textX = x + blockWidth - paddingRight
     }
+    drawText(Object.assign(text, { x: textX, y: textY }), drawOptions)
   } else {
     blockWidth = width
   }
 
-  // 画矩形
+  // 画矩形背景
   if (backgroundColor) {
-    ctx.save()
-    ctx.globalAlpha = opacity
     const grd = getLinearColor(ctx, backgroundColor, x, y, blockWidth, height)
     ctx.fillStyle = grd
+
+    // 画圆角矩形
     if (borderRadius > 0) {
-      // 画圆角矩形
       const drawData = { x, y, w: blockWidth, h: height, r: borderRadius }
       _drawRadiusRect(drawData, drawOptions)
-      ctx.fill()
+      ctx.fill() // 填充路径
     } else {
-      ctx.fillRect(x, y, blockWidth, height)
+      ctx.fillRect(x, y, blockWidth, height) // 绘制矩形
     }
-    ctx.restore()
   }
 
   // 画边框
   if (borderWidth) {
-    ctx.save()
-    ctx.globalAlpha = opacity
     ctx.strokeStyle = borderColor
     ctx.lineWidth = borderWidth
     if (borderRadius > 0) {
       // 画圆角矩形边框
-      const drawData = {
-        x, y, w: blockWidth, h: height, r: borderRadius,
-      }
+      const drawData = { x, y, w: blockWidth, h: height, r: borderRadius }
       _drawRadiusRect(drawData, drawOptions)
       ctx.stroke()
     } else {
       ctx.strokeRect(x, y, blockWidth, height)
     }
-    ctx.restore()
   }
-
-  if (text) {
-    drawText(Object.assign(text, { x: textX, y: textY }), drawOptions)
-  }
+  ctx.restore() // 将 canvas 恢复到最近的保存状态的方法
 }
 
 /**
  * @description 渲染图片
  * @param { object } data
- * @param { number } x - 图像的左上角在目标 canvas 上 x 轴的位置
- * @param { number } y - 图像的左上角在目标 canvas 上 y 轴的位置
- * @param { number } w - 在目标画布上绘制图像的宽度，允许对绘制的图像进行缩放
- * @param { number } h - 在目标画布上绘制图像的高度，允许对绘制的图像进行缩放
- * @param { number } sx - 源图像的矩形选择框的左上角 x 坐标
- * @param { number } sy - 源图像的矩形选择框的左上角 y 坐标
- * @param { number } sw - 源图像的矩形选择框的宽度
- * @param { number } sh - 源图像的矩形选择框的高度
+ * @param { number } sx - 源图像的矩形选择框的左上角 x 坐标 裁剪
+ * @param { number } sy - 源图像的矩形选择框的左上角 y 坐标 裁剪
+ * @param { number } sw - 源图像的矩形选择框的宽度 裁剪
+ * @param { number } sh - 源图像的矩形选择框的高度 裁剪
+ * @param { number } x - 图像的左上角在目标 canvas 上 x 轴的位置 定位
+ * @param { number } y - 图像的左上角在目标 canvas 上 y 轴的位置 定位
+ * @param { number } w - 在目标画布上绘制图像的宽度，允许对绘制的图像进行缩放 定位
+ * @param { number } h - 在目标画布上绘制图像的高度，允许对绘制的图像进行缩放 定位
  * @param { number } [borderRadius=0] - 圆角
  * @param { number } [borderWidth=0] - 边框
  *
  * @param { object } drawOptions - 绘制对象
  * @param { object } drawOptions.ctx - ctx对象
- * @param { function } drawOptions.toPx - toPx方法
- * @param { function } drawOptions.toRpx - toRpx方法
  */
 export const drawImage = (data, drawOptions) => new Promise<void>(resolve => {
-  const { canvas, ctx, toPx } = drawOptions
+  const { canvas, ctx } = drawOptions
   const {
     x,
     y,
@@ -378,7 +372,7 @@ export const drawImage = (data, drawOptions) => new Promise<void>(resolve => {
   ctx.save()
   if (borderRadius > 0) {
     _drawRadiusRect({ x, y, w, h, r: borderRadius }, drawOptions)
-    ctx.clip() // 从原始画中剪切任意形状和尺寸
+    ctx.clip() // 裁切，后续绘图限制在这个裁切范围内，保证图片圆角
     ctx.fill()
     const img = canvas.createImage() // 创建图片对象
     img.src = imgPath

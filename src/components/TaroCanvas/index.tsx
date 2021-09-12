@@ -6,7 +6,7 @@ import { useEffect } from 'react'
 import { Canvas } from '@tarojs/components'
 import { Image } from '@/typings/taroCanvas'
 import { drawImage, drawText, drawBlock, drawLine } from './utils/draw'
-import {toPx, toRpx, getRandomId, downloadImageAndInfo, getLinearColor, getImageInfo } from './utils/tools'
+import {toPx, toRpx, getRandomId, getImageInfo, getLinearColor } from './utils/tools'
 import './index.css'
 
 interface Props {
@@ -19,7 +19,6 @@ interface Props {
 
 let count = 1
 const canvasId = getRandomId() // 唯一id
-
 
 const CanvasDrawer: React.FC<Props> = ({
     config,
@@ -44,7 +43,7 @@ const CanvasDrawer: React.FC<Props> = ({
    */
   const initImages = (images: Image[]) => {
     const imagesTemp = images.filter(item => item.url)
-    const drawList = imagesTemp.map((item, index) => downloadImageAndInfo(item, index))
+    const drawList = imagesTemp.map((item, index) => getImageInfo(item, index))
     return Promise.all(drawList)
   }
 
@@ -69,7 +68,6 @@ const CanvasDrawer: React.FC<Props> = ({
     if (showLoading) Taro.showLoading({ mask: true, title: '生成中...' })
     if (config?.images?.length) {
       initImages(config.images).then(result => { // 1. 下载图片资源
-        console.log('图片资源', result);
         startDrawing(result)
       }).catch(err => {
         Taro.hideLoading()
@@ -95,7 +93,6 @@ const CanvasDrawer: React.FC<Props> = ({
         canvas,
         success: result => {
           console.log('成功获取图片资源', result);
-          getImageInfo(result.tempFilePath)
           Taro.hideLoading()
           if (!onCreateSuccess)console.warn('缺少必传参数 onCreateSuccess')
           onCreateSuccess && onCreateSuccess(result)
@@ -156,7 +153,7 @@ const CanvasDrawer: React.FC<Props> = ({
       }))
       console.log('待绘制任务', drawTasks);
 
-    queue.sort((a, b) => a.zIndex - b.zIndex) // 按照层叠顺序由低至高排序
+    queue.sort((a, b) => a.zIndex - b.zIndex) // 按照层叠顺序由低至高排序, 先画低的，再画高的
     for (let i = 0; i < queue.length; i++) {
       const drawOptions = {
         canvas,
@@ -184,12 +181,14 @@ const CanvasDrawer: React.FC<Props> = ({
 
 
   return (
+  <>
     <Canvas
       type='2d'
       id={canvasId}
       style={`width:${width}px; height:${height}px;`}
       className={`${debug ? 'debug' : 'pro'} canvas`}
     />
+    </>
   )
 }
 

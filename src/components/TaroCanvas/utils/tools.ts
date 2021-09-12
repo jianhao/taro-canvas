@@ -1,5 +1,5 @@
 /* eslint-disable prefer-destructuring */
-import Taro from '@tarojs/taro'
+import Taro, { CanvasContext, CanvasGradient } from '@tarojs/taro'
 
 /**
  * @description 生成随机字符串
@@ -29,52 +29,52 @@ export function getRandomId (prefix = 'canvas', length = 10) {
  * @param  {} config
  * @returns { number }
  */
-export function getHeight (config) {
-  const getTextHeight = text => {
-    const fontHeight = text.lineHeight || text.fontSize
-    let height = 0
-    if (text.baseLine === 'top') {
-      height = fontHeight
-    } else if (text.baseLine === 'middle') {
-      height = fontHeight / 2
-    } else {
-      height = 0
-    }
-    return height
-  }
-  const heightArr: number[] = [];
-  (config.blocks || []).forEach(item => {
-    heightArr.push(item.y + item.height)
-  });
-  (config.texts || []).forEach(item => {
-    let height
-    if (Object.prototype.toString.call(item.text) === '[object Array]') {
-      item.text.forEach(i => {
-        height = getTextHeight({ ...i, baseLine: item.baseLine })
-        heightArr.push(item.y + height)
-      })
-    } else {
-      height = getTextHeight(item)
-      heightArr.push(item.y + height)
-    }
-  });
-  (config.images || []).forEach(item => {
-    heightArr.push(item.y + item.height)
-  });
-  (config.lines || []).forEach(item => {
-    heightArr.push(item.startY)
-    heightArr.push(item.endY)
-  })
-  const sortRes = heightArr.sort((a, b) => b - a)
-  let canvasHeight = 0
-  if (sortRes.length > 0) {
-    canvasHeight = sortRes[0]
-  }
-  if (config.height < canvasHeight || !config.height) {
-    return canvasHeight
-  }
-  return config.height
-}
+// export function getHeight (config) {
+//   const getTextHeight = text => {
+//     const fontHeight = text.lineHeight || text.fontSize
+//     let height = 0
+//     if (text.baseLine === 'top') {
+//       height = fontHeight
+//     } else if (text.baseLine === 'middle') {
+//       height = fontHeight / 2
+//     } else {
+//       height = 0
+//     }
+//     return height
+//   }
+//   const heightArr: number[] = [];
+//   (config.blocks || []).forEach(item => {
+//     heightArr.push(item.y + item.height)
+//   });
+//   (config.texts || []).forEach(item => {
+//     let height
+//     if (Object.prototype.toString.call(item.text) === '[object Array]') {
+//       item.text.forEach(i => {
+//         height = getTextHeight({ ...i, baseLine: item.baseLine })
+//         heightArr.push(item.y + height)
+//       })
+//     } else {
+//       height = getTextHeight(item)
+//       heightArr.push(item.y + height)
+//     }
+//   });
+//   (config.images || []).forEach(item => {
+//     heightArr.push(item.y + item.height)
+//   });
+//   (config.lines || []).forEach(item => {
+//     heightArr.push(item.startY)
+//     heightArr.push(item.endY)
+//   })
+//   const sortRes = heightArr.sort((a, b) => b - a)
+//   let canvasHeight = 0
+//   if (sortRes.length > 0) {
+//     canvasHeight = sortRes[0]
+//   }
+//   if (config.height < canvasHeight || !config.height) {
+//     return canvasHeight
+//   }
+//   return config.height
+// }
 
 /**
  * 将http转为https
@@ -106,7 +106,7 @@ export const getFactor = () => {
 }
 
 /**
- * @description rpx => px 基础方法
+ * rpx => px 单位转换
  * @param { number } rpx - 需要转换的数值
  * @param { number } factor - 转化因子
  * @returns { number }
@@ -114,7 +114,7 @@ export const getFactor = () => {
 export const toPx = (rpx, factor = getFactor()) => parseInt(String(rpx * factor), 10)
 
 /**
- * @description px => rpx
+ * px => rpx 单位转换
  * @param { number } px - 需要转换的数值
  * @param { number } factor - 转化因子
  * @returns { number }
@@ -127,7 +127,7 @@ export const toRpx = (px, factor = getFactor()) => parseInt(String(px / factor),
  * @returns  { Promise }
  */
 export function downImage (url) {
-  return new Promise((resolve, reject) => {
+  return new Promise<string>((resolve, reject) => {
     // eslint-disable-next-line no-undef
     if (/^http/.test(url) && !new RegExp(wx.env.USER_DATA_PATH).test(url)) { // wx.env.USER_DATA_PATH 文件系统中的用户目录路径
       Taro.downloadFile({
@@ -152,49 +152,31 @@ export function downImage (url) {
 }
 
 /**
- * 获取图片信息
- * @param {*} imgPath
- * @param {*} index
- * @returns  { Promise }
- */
-export function getImageInfo (imgPath) {
-  return new Promise((resolve, reject) => {
-    Taro.getImageInfo({
-      src: imgPath,
-      success (res) { resolve({ imgInfo: res }) },
-      fail (err) {
-        reject(err)
-      },
-    })
-  })
-}
-
-/**
 * 下载图片并获取图片信息
 * @param  {} item 图片参数信息
 * @param  {} index 图片下标
 * @returns  { Promise } result 整理后的图片信息
 */
-export const downloadImageAndInfo = (item, index) => new Promise((resolve, reject) => {
-  const { x, y, url, zIndex } = item
-  downImage(url).then(imgPath => getImageInfo(imgPath)
-    .then(({ imgInfo }) => { // 获取图片信息
+export const getImageInfo = (item, index) => new Promise((resolve, reject) => {
+  const { x, y, width, height, url, zIndex } = item
+  downImage(url).then(imgPath =>
+    Taro.getImageInfo({ src: imgPath }).then((imgInfo) => { // 获取图片信息
     // 根据画布的宽高计算出图片绘制的大小，这里会保证图片绘制不变形， 即宽高比不变，截取再拉伸
-      let sx
-      let sy
+      let sx // 截图的起点 x 坐标
+      let sy // 截图的起点 y 坐标
       const borderRadius = item.borderRadius || 0
-      const setWidth = item.width
-      const setHeight = item.height
-      const width = toRpx(imgInfo.width) // 图片真实宽度
-      const height = toRpx(imgInfo.height) // 图片真实高度
+      const imgWidth = toRpx(imgInfo.width) // 图片真实宽度 单位 px
+      const imgHeight = toRpx(imgInfo.height) // 图片真实高度 单位 px
 
-      if (width / height <= setWidth / setHeight) {
+      // 根据宽高比截取图片
+      if (imgWidth / imgHeight <= width / height) {
         sx = 0
-        sy = (height - ((width / setWidth) * setHeight)) / 2
+        sy = (imgHeight - ((imgWidth / width) * height)) / 2
       } else {
         sy = 0
-        sx = (width - ((height / setHeight) * setWidth)) / 2
+        sx = (imgWidth - ((imgHeight / height) * width)) / 2
       }
+      // 给 canvas 画图准备参数，详见 ./draw.ts-drawImage
       const result = {
         type: 'image',
         borderRadius,
@@ -204,34 +186,39 @@ export const downloadImageAndInfo = (item, index) => new Promise((resolve, rejec
         imgPath: url,
         sx,
         sy,
-        sw: (width - (sx * 2)),
-        sh: (height - (sy * 2)),
+        sw: (imgWidth - (sx * 2)),
+        sh: (imgHeight - (sy * 2)),
         x,
         y,
-        w: setWidth,
-        h: setHeight,
+        w: width,
+        h: height,
       }
       resolve(result)
     }).catch(err => {
       console.log('下载图片失败', err)
       reject(err)
-    }))
+    })
+  )
 })
 
 /**
  * 获取线性渐变色
- * @param {*} color 目前只支持0-180deg线性渐变色, 否则报错
- * @param {*} color
- * @returns  { Promise }
+ * @param {CanvasContext} ctx canvas 实例对象
+ * @param {String} color 线性渐变色,如 'linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, #fff 100%)'
+ * @param {Number} startX 起点 x 坐标
+ * @param {Number} startY 起点 y 坐标
+ * @param {Number} w 宽度
+ * @param {Number} h 高度
+ * @returns  {}
  */
-// TODO: 待优化
-export function getLinearColor (ctx, color, startX, startY, w, h) {
+// TODO: 待优化, 支持所有角度，多个颜色的线性渐变
+export function getLinearColor (ctx: CanvasContext, color, startX, startY, w, h) {
   if (typeof startX !== 'number' || typeof startY !== 'number' || typeof w !== 'number' || typeof h !== 'number') {
     console.warn('坐标或者宽高只支持数字')
     return color
   }
-  let grd = color
-  if (color.includes('linear-gradient')) { // fillStyle不支持线性渐变色
+  let grd: CanvasGradient | string = color
+  if (color.includes('linear-gradient')) { // fillStyle 不支持线性渐变色
     const colorList = color.match(/\((\d+)deg,\s(.+)\s\d+%,\s(.+)\s\d+%/)
     const radian = colorList[1] // 渐变弧度（角度）
     const color1 = colorList[2]
@@ -254,8 +241,8 @@ export function getLinearColor (ctx, color, startX, startY, w, h) {
     } else {
       throw new Error('只支持0 <= 颜色弧度 <= 180')
     }
-    grd.addColorStop(0, color1)
-    grd.addColorStop(1, color2)
+    (grd as CanvasGradient).addColorStop(0, color1);
+    (grd as CanvasGradient).addColorStop(1, color2)
   }
   return grd
 }
