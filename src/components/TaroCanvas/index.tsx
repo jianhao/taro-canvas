@@ -2,14 +2,14 @@
 /* eslint-disable no-unused-expressions */
 /* eslint-disable react/forbid-prop-types */
 import Taro from '@tarojs/taro'
-import { useEffect } from 'react'
+import React, { useEffect } from 'react'
 import { Canvas } from '@tarojs/components'
-import { Image } from '@/typings/taroCanvas'
+import { Image } from './types'
 import { drawImage, drawText, drawBlock, drawLine } from './utils/draw'
 import {toPx, toRpx, getRandomId, getImageInfo, getLinearColor } from './utils/tools'
-import './index.css'
+import '../../TaroCanvas.css'
 
-interface Props {
+export interface CanvasDrawerProps {
   config?: any
   debug?: boolean
   showLoading?: boolean
@@ -20,7 +20,7 @@ interface Props {
 let count = 1
 const canvasId = getRandomId() // 唯一id
 
-const CanvasDrawer: React.FC<Props> = ({
+const CanvasDrawer: React.FC<CanvasDrawerProps> = ({
     config,
     debug,
     showLoading,
@@ -181,14 +181,12 @@ const CanvasDrawer: React.FC<Props> = ({
 
 
   return (
-  <>
     <Canvas
       type='2d'
       id={canvasId}
       style={`width:${width}px; height:${height}px;`}
       className={`${debug ? 'debug' : 'pro'} canvas`}
     />
-    </>
   )
 }
 

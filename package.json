@@ -4,25 +4,36 @@
   "author": "jianhao",
   "license": "ISC",
   "description": "基于 Taro3 的微信小程序 canvas 绘图组件，封装了常用的操作,通过配置的方式绘制海报",
+  "source": "src/index.ts",
+  "main": "dist/index.js",
+  "browser": "dist/index.umd.js",
+  "module": "dist/index.esm.js",
+  "typings": "./typings/index.d.ts",
+  "files": [
+    "lib",
+    "dist",
+    "types"
+  ],
   "templateInfo": {
     "name": "default",
     "typescript": true,
     "css": "less"
   },
-  "main": "dist/index.js",
-  "typings": "./typings/index.d.ts",
   "scripts": {
-    "start": "yarn dev:weapp",
-    "build": "yarn build:weapp",
+    "start": "yarn clean && yarn dev:weapp",
     "dev:weapp": "npm run build:weapp -- --watch",
-    "build:weapp": "taro build --type weapp"
+    "build:weapp": "taro build --type weapp",
+    "build": "yarn clean && yarn build:rollup && yarn build:lib",
+    "build:lib": "tsc --project ./tsconfig.build.json --declaration --declarationDir types",
+    "build:rollup": "rollup --config ./rollup.config.js",
+    "clean": "rimraf lib dist"
   },
   "browserslist": [
     "last 3 versions",
     "Android >= 4.1",
     "ios >= 8"
   ],
-  "dependencies": {
+  "peerDependencies": {
     "@babel/runtime": "^7.7.7",
     "@tarojs/components": "3.3.7",
     "@tarojs/react": "3.3.7",
@@ -33,6 +44,9 @@
   },
   "devDependencies": {
     "@babel/core": "^7.8.0",
+    "@rollup/plugin-commonjs": "^20.0.0",
+    "@rollup/plugin-json": "^4.1.0",
+    "@rollup/plugin-node-resolve": "^13.0.4",
     "@tarojs/cli": "3.3.7",
     "@tarojs/mini-runner": "3.3.7",
     "@tarojs/webpack-runner": "3.3.7",
@@ -46,6 +60,11 @@
     "eslint-plugin-import": "^2.12.0",
     "eslint-plugin-react": "^7.8.2",
     "eslint-plugin-react-hooks": "^4.2.0",
+    "rimraf": "^3.0.2",
+    "rollup": "^2.56.3",
+    "rollup-plugin-copy": "^3.4.0",
+    "rollup-plugin-css-only": "^3.1.0",
+    "rollup-plugin-typescript2": "^0.30.0",
     "typescript": "^4.1.0"
   }
 }

@@ -82,3 +82,4 @@ export type DrawType = 'text' | 'image' | 'block' | 'line';
 export type DrawArrayItem = {
   type?: DrawType;
 } & (Line | Image | Block | Text);
+

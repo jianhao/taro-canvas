@@ -1,7 +1,8 @@
 {
   "compilerOptions": {
     "target": "es2017",
-    "module": "commonjs",
+    "module": "es6",
+    // "module": "commonjs",
     "removeComments": false,
     "preserveConstEnums": true,
     "moduleResolution": "node",
@@ -26,9 +27,14 @@
       "@/*": ["src/*"],
     },
   },
+  "compileOnSave": false,
   "exclude": [
     "node_modules",
     "dist"
   ],
-  "compileOnSave": false
+  "include": [
+    "src/index.ts",
+    "src/utils/*",
+    "src/components/**/*",
+  ]
 }

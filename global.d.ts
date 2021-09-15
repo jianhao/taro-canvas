@@ -17,4 +17,3 @@ declare namespace NodeJS {
   }
 }
 
-declare const wx: any

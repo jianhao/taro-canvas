@@ -1,6 +1,8 @@
 /* eslint-disable prefer-destructuring */
 import Taro, { CanvasContext, CanvasGradient } from '@tarojs/taro'
 
+declare const wx: any
+
 /**
  * @description 生成随机字符串
  * @param  { number } length - 字符串长度

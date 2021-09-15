@@ -4,11 +4,12 @@ import Taro from '@tarojs/taro'
 import { View, Image, Button, Canvas } from '@tarojs/components'
 import classnames from 'classnames'
 import cloneDeep from 'lodash/clonedeep'
-import TaroCanvas from '@/components/TaroCanvas'
 import selectedImg from '@/assets/selected.png'
 import { saveImgAlbum, queryAuth } from '@/utils/nativeApi'
+import { TaroCanvas } from '../../../lib/index'
 import styles from './index.module.less'
 
+console.log('TaroCanvas', TaroCanvas);
 // 默认海报配置
 const defaultConfig = {
   width: 750,
