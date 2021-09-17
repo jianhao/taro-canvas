@@ -26,6 +26,7 @@
   ],
   "include": [
     "src/index.ts",
+    // "src/TaroCanvas.css",
     "src/utils/*",
     "src/components/**/*",
   ]

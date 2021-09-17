@@ -6,10 +6,9 @@ import classnames from 'classnames'
 import cloneDeep from 'lodash/clonedeep'
 import selectedImg from '@/assets/selected.png'
 import { saveImgAlbum, queryAuth } from '@/utils/nativeApi'
-import { TaroCanvas } from '../../../lib/index'
+import TaroCanvas from '@/components/TaroCanvas'
 import styles from './index.module.less'
 
-console.log('TaroCanvas', TaroCanvas);
 // 默认海报配置
 const defaultConfig = {
   width: 750,
@@ -275,10 +274,8 @@ function Index () {
     setTimeout(() => { // 不延时可能会
       const { text, fontWeight, fontSize, fontFamily } = textData || {}
       const pageInstance = Taro.getCurrentInstance()?.page || {} // 拿到当前页面实例
-      console.log('页面', pageInstance);
       const query = Taro.createSelectorQuery().in(pageInstance)
       query.select('#tempCanvas').fields({ node: true, size: true, context: true }, res => {
-        console.log('res', res);
         const canvas = res.node
         const ctx = canvas.getContext('2d')
         ctx.font = `${fontWeight} ${fontSize}px ${fontFamily}`

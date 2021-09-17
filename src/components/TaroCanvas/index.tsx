@@ -1,12 +1,11 @@
-/* eslint-disable no-await-in-loop */
-/* eslint-disable no-unused-expressions */
-/* eslint-disable react/forbid-prop-types */
 import Taro from '@tarojs/taro'
 import React, { useEffect } from 'react'
 import { Canvas } from '@tarojs/components'
 import { Image } from './types'
 import { drawImage, drawText, drawBlock, drawLine } from './utils/draw'
-import {toPx, toRpx, getRandomId, getImageInfo, getLinearColor } from './utils/tools'
+import { toPx, toRpx, getRandomId, getImageInfo, getLinearColor } from './utils/tools'
+
+// 引入css
 import '../../TaroCanvas.css'
 
 export interface CanvasDrawerProps {
@@ -185,7 +184,7 @@ const CanvasDrawer: React.FC<CanvasDrawerProps> = ({
       type='2d'
       id={canvasId}
       style={`width:${width}px; height:${height}px;`}
-      className={`${debug ? 'debug' : 'pro'} canvas`}
+      className={`${debug ? 'debug' : 'pro'} taro_canvas`}
     />
   )
 }

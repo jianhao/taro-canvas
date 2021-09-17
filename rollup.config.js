@@ -1,14 +1,15 @@
-import NodePath from 'path'
+import path from 'path'
 import RollupJson from '@rollup/plugin-json'
 import RollupNodeResolve from '@rollup/plugin-node-resolve'
 import RollupCommonjs from '@rollup/plugin-commonjs'
 import RollupTypescript from 'rollup-plugin-typescript2'
-// import RollupCopy from 'rollup-plugin-copy'
+// import { terser } from 'rollup-plugin-terser' // 代码压缩
 import css from 'rollup-plugin-css-only'
+// import css from 'rollup-plugin-postcss'
 
 import Package from './package.json'
 
-const resolveFile = path => NodePath.resolve(__dirname, path)
+const resolveFile = filePath => path.resolve(__dirname, filePath)
 
 const externalPackages = [
   'react',
@@ -23,26 +24,26 @@ export default {
   input: resolveFile(Package.source),
   output: [
     {
-      file: resolveFile(Package.main),
+      file: resolveFile(Package.common),
       format: 'cjs',
-      sourcemap: true
+      sourcemap: true,
     },
     {
       file: resolveFile(Package.module),
       format: 'es',
-      sourcemap: true
+      sourcemap: true,
     },
     {
       file: resolveFile(Package.browser),
       format: 'umd',
-      name: 'taro-ui',
+      name: 'taroCanvas',
       sourcemap: true,
       globals: {
         react: 'React',
         '@tarojs/components': 'components',
-        '@tarojs/taro': 'Taro'
-      }
-    }
+        '@tarojs/taro': 'Taro',
+      },
+    },
   ],
   external: externalPackages,
   plugins: [
@@ -50,20 +51,13 @@ export default {
       moduleDirectories: ['node_modules']
     }),
     RollupCommonjs({
-      include: /\/node_modules\//
+      include: [/\/node_modules\//],
     }),
     RollupJson(),
     RollupTypescript({
-      tsconfig: resolveFile('tsconfig.rollup.json')
+      tsconfig: resolveFile('tsconfig.rollup.json'),
     }),
-    css({ output: 'TaroCanvas.css' })
-    // RollupCopy({
-    //   targets: [
-    //     {
-    //       src: resolveFile('src/index.css'),
-    //       dest: resolveFile('dist')
-    //     }
-    //   ]
-    // }),
-  ]
+    // terser(),
+    css({output: 'index.css'}),
+  ],
 }
