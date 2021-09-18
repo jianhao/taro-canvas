@@ -1,20 +1,7 @@
-
-export interface Config {
-  width: number;
-  height: number;
-  backgroundColor?: string;
-  debug?: boolean;
-  pixelRatio?: number;
-  preload?: boolean;
-  'hide-loading'?: boolean;
-  blocks?: Block[];
-  texts?: Text[];
-  images?: Image[];
-  lines?: Line[];
-}
-
+export type DrawType = 'text' | 'image' | 'block' | 'line';
 
 export interface Block {
+  type?: DrawType
   x: number;
   y: number;
   width?: number;
@@ -31,19 +18,17 @@ export interface Block {
 }
 
 export interface Text {
-  x: number;
-  y: number;
-  text: string | {
-    text: string;
-    marginLeft: number;
-    marginRight: number;
-  };
-  fontSize: number;
+  type?: DrawType
+  x?: number;
+  y?: number;
+  text: string | Text [];
+  fontSize?: number;
   color?: string;
   opacity?: 1 | 0;
   lineHeight?: number;
   lineNum?: number;
   width?: number;
+  marginTop?: number;
   marginLeft?: number;
   marginRight?: number;
   textDecoration?: 'line-through' | 'none';
@@ -56,6 +41,7 @@ export interface Text {
 }
 
 export interface Image {
+  type?: DrawType
   x: number;
   y: number;
   url: string;
@@ -68,6 +54,7 @@ export interface Image {
 }
 
 export interface Line {
+  type?: DrawType
   startX: number;
   startY: number;
   endX: number;
@@ -77,9 +64,14 @@ export interface Line {
   zIndex?: number;
 }
 
-export type DrawType = 'text' | 'image' | 'block' | 'line';
-
-export type DrawArrayItem = {
-  type?: DrawType;
-} & (Line | Image | Block | Text);
+export type DrawConfig = {
+  width: number,
+  height: number,
+  backgroundColor?: string,
+  debug?: boolean,
+  blocks?: Block[],
+  texts?: Text[],
+  images?: Image[],
+  lines?: Line[],
+}
 

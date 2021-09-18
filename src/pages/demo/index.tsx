@@ -1,4 +1,3 @@
-/* eslint-disable react/no-multi-comp */
 import { useState, useCallback, useEffect } from 'react'
 import Taro from '@tarojs/taro'
 import { View, Image, Button, Canvas } from '@tarojs/components'
@@ -7,6 +6,7 @@ import cloneDeep from 'lodash/clonedeep'
 import selectedImg from '@/assets/selected.png'
 import { saveImgAlbum, queryAuth } from '@/utils/nativeApi'
 import TaroCanvas from '@/components/TaroCanvas'
+import { DrawConfig } from '@/components/TaroCanvas/types'
 import styles from './index.module.less'
 
 // 默认海报配置
@@ -87,9 +87,7 @@ const defaultConfig = {
       fontSize: 24,
       color: '#fff',
       lineHeight: 33,
-      height: 33,
       lineNum: 1,
-      textAlign: 'left',
       width: 500,
       zIndex: 50,
     },
@@ -97,26 +95,21 @@ const defaultConfig = {
       x: 65,
       y: 547,
       text: '剑豪向你推荐好车',
-      textAlign: 'left',
       color: '#1E63ED',
       fontSize: 32,
       lineHeight: 45,
-      display: 'block',
       zIndex: 50,
     },
     {
       x: 65,
       y: 615,
-      text: '奥迪A4L 2019款 40 TFSI 时尚版',
+      text: '玛莎拉蒂 2019款 40 TFSI 时尚版',
       width: 630,
-      height: 134,
       lineNum: 2, // 最多几行
       fontSize: 48,
       fontWeight: 'bold',
       color: 'rgba(0, 0, 0, 0.9)',
       lineHeight: 67,
-      textAlign: 'left',
-      display: 'block',
       zIndex: 50,
     },
     {
@@ -130,7 +123,6 @@ const defaultConfig = {
           fontWeight: 'bold',
           color: 'red',
           lineNum: 1,
-          textAlign: 'left',
           zIndex: 1000,
         },
         {
@@ -143,7 +135,6 @@ const defaultConfig = {
           fontWeight: 'bold',
           color: '#FF2322',
           lineNum: 1,
-          textAlign: 'left',
           zIndex: 50,
         },
         {
@@ -152,7 +143,6 @@ const defaultConfig = {
           fontSize: 28,
           color: 'rgba(0, 0, 0, 0.6)',
           lineNum: 1,
-          textAlign: 'left',
           zIndex: 50,
         },
       ],
@@ -174,7 +164,6 @@ const defaultConfig = {
       lineNum: 3,
       // width: 386,
       width: 547,
-      height: 74,
       lineHeight: 37,
       fontSize: 26,
       color: 'rgba(0, 0, 0, 0.6)',
@@ -187,9 +176,7 @@ const defaultConfig = {
       fontSize: 24,
       color: '#1E63ED',
       lineHeight: 33,
-      height: 33,
       lineNum: 1,
-      textAlign: 'left',
       zIndex: 50,
     },
     {
@@ -199,9 +186,7 @@ const defaultConfig = {
       fontSize: 24,
       color: '#1E63ED',
       lineHeight: 33,
-      height: 33,
       lineNum: 1,
-      textAlign: 'left',
       zIndex: 50,
     },
     {
@@ -212,7 +197,6 @@ const defaultConfig = {
       fontWeight: 'bold',
       color: '#4069F6',
       lineHeight: 49,
-      height: 49,
       lineNum: 1,
       zIndex: 50,
     },
@@ -260,7 +244,7 @@ const COLOR_TYPES = [
 function Index () {
   const [crawLoading, setCrawLoading] = useState(false) // 绘制中
   const [canvasStatus, setCanvasStatus] = useState(false) // 展示 canvas 组件
-  const [config, setConfig] = useState({}) // 海报配置参数
+  const [config, setConfig] = useState<DrawConfig>(defaultConfig) // 海报配置参数
   const [currentColor, setCurrentColor] = useState(COLOR_TYPES[0]) // 背景色选项
   const [tempImgs, setTempImgs] = useState<any>([]) // 海报配置参数
 
@@ -308,14 +292,14 @@ function Index () {
   // 绘制后保存图片
   const saveImg = useCallback(async () => {
     setCrawLoading(false)
-    return
+    return // 需要保存到本地就去除这行代码
     const hasAuth = await queryAuth('scope.writePhotosAlbum')
     console.log('有没有权限保存图片', hasAuth);
     if (hasAuth) {
       console.log('缓存图片', tempImgs)
       const taskList = tempImgs.map((url, index) => saveImgAlbum(url, index + 1)) // 添加保存图片的任务
       await Promise.all(taskList)
-      Taro.showToast({ icon: 'none', title: '海报已保存到手机' })
+      Taro.showToast({ icon: 'none', title: '海报已保存到本地' })
     } else { // 如果拒绝授权相册, 引导用户去授权
       Taro.showToast({ icon: 'none', title: '请授权小程序获取相册权限' })
     }
@@ -341,7 +325,7 @@ function Index () {
     const { tempFilePath, errMsg } = result
     let msg = '绘制失败'
     setCanvasStatus(false)
-    setConfig({})
+    // setConfig(null)
     msg = '海报绘制出现错误'
     if (errMsg === 'canvasToTempFilePath:ok') {
       setTempImgs([...tempImgs, tempFilePath])
@@ -380,7 +364,6 @@ function Index () {
       { // 由于小程序限制，目前组件通过状态的方式来动态加载
         canvasStatus && (
           <TaroCanvas
-            // debug
             config={config} // 绘制配置
             onCreateSuccess={onCreateSuccess} // 绘制成功回调
             onCreateFail={onCreateFail} // 绘制失败回调

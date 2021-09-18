@@ -3,13 +3,13 @@
    [![npm](https://img.shields.io/npm/v/taro-canvas.svg?style=flat "npm")](https://www.npmjs.com/package/taro-canvas)[![npm](https://img.shields.io/npm/dm/taro-canvas.svg?style=flat "npm")](https://www.npmjs.com/package/taro-canvas)
 
 ## 概述
-taro-canvas 是基于 Taro 框架的微信小程序 canvas 绘图组件，封装了常用的操作,通过配置的方式绘制海报。
+taro-canvas 是基于 Taro3 的微信小程序 canvas 绘图组件，封装了常用的操作, 通过配置的方式绘制海报。
 
 
 ## 生成效果
-<img width="300" src="http://pic.jianhunxia.com/imgs/20210913093928poster1.png"></img> 
-<!-- <img width="300" src="https://github.com/chuyun/taro-canvas/blob/v1/src/assets/images/demo2.png"></img>
-<img width="300" src="https://github.com/chuyun/taro-canvas/blob/v1/src/assets/images/demo3.png"></img> -->
+<img width="300" src="http://pic.jianhunxia.com/imgs/20210918103108poster1.png"></img> 
+<!-- <img width="300" src="http://pic.jianhunxia.com/imgs/20210918101604taroCanvasImg2.png"></img> -->
+<!-- <img width="300" src="https://github.com/chuyun/taro-canvas/blob/v1/src/assets/images/demo3.png"></img> -->
 
 ## 安装使用
 
@@ -28,7 +28,7 @@ yarn add taro-canvas --production
 
 ```javascript
 // 引入代码
-import { TaroCanvasDrawer } from '../../component/taro-canvas';
+import { TaroCanvasDrawer } from 'taro-canvas';
 
 // 在 render 方法中调用
 <TaroCanvasDrawer
@@ -73,14 +73,10 @@ import TaroCanvasDrawer from '../../component/taro-canvas';
 | height          | Number(单位:rpx)         | 是   | 画布高度                                   |
 | backgroundColor | String                   | 否   | 画布颜色                                   |
 | debug           | Boolean                  | 否   | false隐藏canvas，true显示canvas，默认false |
-| preload         | Boolean                  | 否   | true：图片资源预下载 默认false             |
-| hide-loading    | Boolean                  | 否   | true：隐藏loading 默认false                |
 | blocks          | Object Array（对象数组） | 否   | 看下文                                     |
 | texts           | Object Array（对象数组） | 否   | 看下文                                     |
 | images          | Object Array（对象数组） | 否   | 看下文                                     |
 | lines           | Object Array（对象数组） | 否   | 看下文   |
-| pixelRatio | Number | 否 | 1为一般，值越大越清晰 |
-
 ### blocks字段
 
 | 字段名          | 类型             | 必填 | 描述                                   |
@@ -206,238 +202,294 @@ import TaroCanvasDrawer from '../../component/taro-canvas';
 
 ## Demo 
 
-以下是简易的Demo实现，也可以clone代码，里面有具体实现，线上案例见小程序 RssFeed  
+以下是示例海报的详细代码，也可以clone仓库，去 src/pages/demo 具体实现。 
 
 
 <details><summary>例子代码（点击展开）</summary><br>
 
-```jsx
-import Taro, { Component } from '@tarojs/taro'
-import { View, Button, Image } from '@tarojs/components'
-import TaroCanvasDrawer from '../../component/taro-canvas'; // 拷贝文件到component的引入方式
-// import { TaroCanvasDrawer  } from 'taro-canvas'; // npm 引入方式
-import './index.scss'
+```tsx
+import Taro from '@tarojs/taro'
+import React, { useEffect } from 'react'
+import { Canvas } from '@tarojs/components'
+import { Image, DrawConfig } from './types'
+import { drawImage, drawText, drawBlock, drawLine } from './utils/draw'
+import { toPx, toRpx, getRandomId, getImageInfo, getLinearColor } from './utils/tools'
 
-export default class Simple extends Component {
-  config = {
-    navigationBarTitleText: '首页'
-  }
-  constructor(props) {
-    super(props);
-    this.state = {
-      // 绘图配置文件
-      config: null,
-      // 绘制的图片
-      shareImage: null,
-      // TaroCanvasDrawer 组件状态
-      canvasStatus: false,
-      rssConfig: {
-        width: 750,
-        height: 750,
-        backgroundColor: '#fff',
-        debug: false,
-        blocks: [
-          {
-            x: 0,
-            y: 0,
-            width: 750,
-            height: 750,
-            paddingLeft: 0,
-            paddingRight: 0,
-            borderWidth: 0,
-            // borderColor: '#ccc',
-            backgroundColor: '#EFF3F5',
-            borderRadius: 0,
-          },
-          {
-            x: 40,
-            y: 40,
-            width: 670,
-            height: 670,
-            paddingLeft: 0,
-            paddingRight: 0,
-            borderWidth: 0,
-            // borderColor: '#ccc',
-            backgroundColor: '#fff',
-            borderRadius: 12,
-          }
-        ],
-        texts: [
-          {
-            x: 80,
-            y: 420,
-            text: '国产谍战 真人演出,《隐形守护者》凭什么成为Steam第一?',
-            fontSize: 32,
-            color: '#000',
-            opacity: 1,
-            baseLine: 'middle',
-            lineHeight: 48,
-            lineNum: 2,
-            textAlign: 'left',
-            width: 580,
-            zIndex: 999,
-          },
-          {
-            x: 80,
-            y: 590,
-            text: '长按扫描二维码阅读完整内容',
-            fontSize: 24,
-            color: '#666',
-            opacity: 1,
-            baseLine: 'middle',
-            textAlign: 'left',
-            lineHeight: 36,
-            lineNum: 1,
-            zIndex: 999,
-          },
-          {
-            x: 80,
-            y: 640,
-            text: '分享来自 「 RssFeed 」',
-            fontSize: 24,
-            color: '#666',
-            opacity: 1,
-            baseLine: 'middle',
-            textAlign: 'left',
-            lineHeight: 36,
-            lineNum: 1,
-            zIndex: 999,
-          }
-        ],
-        images: [
-          {
-            url: 'http://pic.juncao.cc/rssfeed/images/demo.png',
-            width: 670,
-            height: 320,
-            y: 40,
-            x: 40,
-            borderRadius: 12,
-            zIndex: 10,
-            // borderRadius: 150,
-            // borderWidth: 10,
-            // borderColor: 'red',
-          },
-          {
-            url: 'https://pic.juncao.cc/cms/images/minapp.jpg',
-            width: 110,
-            height: 110,
-            y: 570,
-            x: 560,
-            borderRadius: 100,
-            borderWidth: 0,
-            zIndex: 10,
-          },
-        ],
-        lines: [
-          {
-            startY: 540,
-            startX: 80,
-            endX: 670,
-            endY: 541,
-            width: 1,
-            color: '#eee',
-          }
-        ]
-      },
-    }
+// 引入css
+import '../../TaroCanvas.css'
+
+export interface CanvasDrawerProps {
+  config?: DrawConfig
+  showLoading?: boolean
+  onCreateSuccess?: (result: any) => void
+  onCreateFail?: (result: any) => void
+}
+
+let count = 1
+const canvasId = getRandomId() // 唯一id
+
+const CanvasDrawer: React.FC<CanvasDrawerProps> = ({
+    config,
+    showLoading,
+    onCreateSuccess,
+    onCreateFail,
+  }) => {
+  const {
+    width,
+    height,
+    backgroundColor,
+    texts = [],
+    blocks = [],
+    lines = [],
+    debug = false,
+  } = config || {}
+
+  /**
+   * step1: 初始化图片资源
+   * @param  {Array} images = imgTask
+   * @return {Promise} downloadImagePromise
+   */
+  const initImages = (images: Image[]) => {
+    const imagesTemp = images.filter(item => item.url)
+    const drawList = imagesTemp.map((item, index) => getImageInfo(item, index))
+    return Promise.all(drawList)
   }
 
-  // 调用绘画 => canvasStatus 置为true、同时设置config
-  canvasDrawFunc = (config = this.state.rssConfig) => {
-    this.setState({
-      canvasStatus: true,
-      config: config,
-    })
-    Taro.showLoading({
-      title: '绘制中...'
-    })
-  }
+  /**
+   * step2: 初始化 canvas && 获取其 dom 节点和实例
+   * @return {Promise} resolve 里返回其 dom 和实例
+   */
+  const initCanvas = () => new Promise<any>(resolve => {
+    setTimeout(() => {
+      const pageInstance = Taro.getCurrentInstance()?.page || {} // 拿到当前页面实例
+      const query = Taro.createSelectorQuery().in(pageInstance) // 确定在当前页面内匹配子元素
+      query.select(`#${canvasId}`).fields({ node: true, size: true, context: true }, res => {
+        const canvas = res.node
+        const ctx = canvas.getContext('2d')
+        resolve({ ctx, canvas })
+      }).exec()
+    }, 300)
+  })
 
-  // 绘制成功回调函数 （必须实现）=> 接收绘制结果、重置 TaroCanvasDrawer 状态
-  onCreateSuccess = (result) => {
-    const { tempFilePath, errMsg } = result;
-    Taro.hideLoading();
-    if (errMsg === 'canvasToTempFilePath:ok') {
-      this.setState({
-        shareImage: tempFilePath,
-        // 重置 TaroCanvasDrawer 状态，方便下一次调用
-        canvasStatus: false,
-        config: null
+  // start: 初始化 canvas 实例 && 下载图片资源
+  const init = () => {
+    if (showLoading) Taro.showLoading({ mask: true, title: '生成中...' })
+    if (config?.images?.length) {
+      initImages(config.images).then(result => { // 1. 下载图片资源
+        startDrawing(result)
+      }).catch(err => {
+        Taro.hideLoading()
+        Taro.showToast({ icon: 'none', title: err.errMsg || '下载图片失败' })
+        onCreateFail && onCreateFail(err)
       })
     } else {
-      // 重置 TaroCanvasDrawer 状态，方便下一次调用
-      this.setState({
-        canvasStatus: false,
-        config: null
-      })
-      Taro.showToast({ icon: 'none', title: errMsg || '出现错误' });
-      console.log(errMsg);
-    }
-    // 预览
-    // Taro.previewImage({
-    //   current: tempFilePath,
-    //   urls: [tempFilePath]
-    // })
-  }
-
-  // 绘制失败回调函数 （必须实现）=> 接收绘制错误信息、重置 TaroCanvasDrawer 状态
-  onCreateFail = (error) => {
-    Taro.hideLoading();
-    // 重置 TaroCanvasDrawer 状态，方便下一次调用
-    this.setState({
-      canvasStatus: false,
-      config: null
-    })
-    console.log(error);
-  }
-
-   // 保存图片至本地
-  saveToAlbum = () => {
-    const res = Taro.saveImageToPhotosAlbum({
-      filePath: this.state.shareImage,
-    });
-    if (res.errMsg === 'saveImageToPhotosAlbum:ok') {
-      Taro.showToast({
-        title: '保存图片成功',
-        icon: 'success',
-        duration: 2000,
-      });
+      startDrawing([])
     }
   }
 
-  render() {
-    return (
-      <View className='index'>
-        <View>
-          <View className='flex-row'>
-            <Button onClick={this.canvasDrawFunc.bind(this, this.state.rssConfig)}>绘制</Button>
-            <Button onClick={this.saveToAlbum}>保存到相册</Button>
-          </View>
-        </View>
-        <View className='shareImage-cont'>
-          <Image
-            className='shareImage'
-            src={this.state.shareImage}
-            mode='widthFix'
-            lazy-load
-          />
-          {
-            // 由于部分限制，目前组件通过状态的方式来动态加载
-            this.state.canvasStatus &&
-            (<TaroCanvasDrawer
-              config={this.state.config} // 绘制配置
-              onCreateSuccess={this.onCreateSuccess} // 绘制成功回调
-              onCreateFail={this.onCreateFail} // 绘制失败回调
-            />
-            )
+  useEffect(() => {
+    init()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+    /**
+   * @description 保存绘制的图片
+   * @param  { object } config
+   */
+     const getTempFile = canvas => {
+      Taro.canvasToTempFilePath({
+        canvas,
+        success: result => {
+          console.log('成功获取图片资源', result);
+          Taro.hideLoading()
+          if (!onCreateSuccess)console.warn('缺少必传参数 onCreateSuccess')
+          onCreateSuccess && onCreateSuccess(result)
+        },
+        fail: error => {
+          const { errMsg } = error
+          console.log(errMsg)
+          if (errMsg === 'canvasToTempFilePath:fail:create bitmap failed') {
+            count += 1
+            if (count <= 3) {
+              getTempFile(canvas)
+            } else {
+              Taro.hideLoading()
+              Taro.showToast({ icon: 'none', title: errMsg || '绘制海报失败' })
+              if (!onCreateFail) console.warn('缺少必传参数 onCreateFail')
+              onCreateFail && onCreateFail(error)
+            }
           }
-        </View>
-      </View>
-    )
+        },
+      }, CanvasDrawer)
+    }
+
+  /**
+   * step2: 开始绘制任务
+   * @param  { Array } drawTasks 待绘制任务
+   */
+  const startDrawing = async (drawTasks) => {
+    // TODO: check
+    // const configHeight = getHeight(config)
+    const { ctx, canvas } = await initCanvas()
+
+    canvas.width = width
+    canvas.height = height
+
+    // 设置画布底色
+    if (backgroundColor) {
+      ctx.save() // 保存绘图上下文
+      const grd = getLinearColor(ctx, backgroundColor, 0, 0, width, height)
+      ctx.fillStyle = grd // 设置填充颜色
+      ctx.fillRect(0, 0, width, height) // 填充一个矩形
+      ctx.restore() // 恢复之前保存的绘图上下文
+    }
+     // 将要画的方块、文字、线条放进队列数组
+    const queue = drawTasks.concat(texts.map(item => {
+        item.type = 'text'
+        item.zIndex = item.zIndex || 0
+        return item
+      }))
+      .concat(blocks.map(item => {
+        item.type = 'block'
+        item.zIndex = item.zIndex || 0
+        return item
+      }))
+      .concat(lines.map(item => {
+        item.type = 'line'
+        item.zIndex = item.zIndex || 0
+        return item
+      }))
+      console.log('待绘制任务', drawTasks);
+
+    queue.sort((a, b) => a.zIndex - b.zIndex) // 按照层叠顺序由低至高排序, 先画低的，再画高的
+    for (let i = 0; i < queue.length; i++) {
+      const drawOptions = {
+        canvas,
+        ctx,
+        toPx,
+        toRpx,
+      }
+      if (queue[i].type === 'image') {
+        await drawImage(queue[i], drawOptions)
+      } else if (queue[i].type === 'text') {
+        drawText(queue[i], drawOptions)
+      } else if (queue[i].type === 'block') {
+        drawBlock(queue[i], drawOptions)
+      } else if (queue[i].type === 'line') {
+        drawLine(queue[i], drawOptions)
+      }
+    }
+    console.log('绘制完毕');
+
+    setTimeout(() => {
+      getTempFile(canvas) // 需要做延时才能能正常加载图片
+    }, 300)
+  }
+
+
+
+  return (
+    <Canvas
+      type='2d'
+      id={canvasId}
+      style={`width:${width}px; height:${height}px;`}
+      className={`${debug ? 'debug' : 'pro'} taro_canvas`}
+    />
+  )
+}
+
+export default CanvasDrawer
+```
+
+样式文件
+```less
+.posterPreview {
+  width: 100%;
+  height: 100vh;
+  padding-bottom: constant(safe-area-inset-bottom); /* 兼容 IOS<11.2 */
+  padding-bottom: env(safe-area-inset-bottom); /* 兼容 IOS>11.2 */
+  background: rgba(248, 248, 248, 1);
+  padding-bottom: 350px;
+
+  .posterImg{
+    width: 690px;
+    margin: 50px 30px;
+  }
+
+  // 底部按钮
+  .btnBox {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    z-index: 500;
+    box-sizing: border-box;
+    width: 100%;
+    padding: 27px 30px;
+    padding-bottom: calc(27px + constant(safe-area-inset-bottom)); /* 兼容 IOS<11.2 */
+    padding-bottom: calc(27px + env(safe-area-inset-bottom)); /* 兼容 IOS>11.2 */
+    background: #fff;
+
+    .saveBtn {
+      line-height: 90px;
+      width: 690px;
+      height:90px;
+      font-size: 30px;
+      color: #fff;
+      background: linear-gradient(213deg, #5495FF 0%, #2F5CF5 100%);
+    }
+
+    .btnWrap {
+      display: flex;
+      justify-content: space-around;
+      width: 690px;
+      margin: 0 auto;
+      margin-bottom: 20px;
+
+      .bgItem {
+        position: relative;
+        width: 66px;
+        height: 66px;
+        border-radius: 33px;
+
+        .selected {
+          position: absolute;
+          top: -5px;
+          right: -5px;
+          width: 30px;
+          height: 30px;
+          border-radius: 15px;
+        }
+      }
+    }
+  }
+
+  .itemBlue {
+    background: linear-gradient(136deg, #8454ff 0%, #005fff 100%);
+  }
+
+  .itemGreen {
+    background: linear-gradient(180deg, rgba(180, 236, 81, 1) 0%, rgba(66, 147, 33, 1) 100%);
+  }
+
+  .itemPurple {
+    background: linear-gradient(135deg, rgba(48, 35, 174, 1) 0%, rgba(200, 109, 215, 1) 100%);
+  }
+
+  .itemRed {
+    background: linear-gradient(0deg, #f7a21c 0%, #ff023f 100%);
+  }
+
+  .tempCanvas {
+    position: absolute;
+    top: -10000px;
+    left: 0;
+    width: 750px;
+    height: 1000px;
   }
 }
 
 ```
+</details>
 
 ### 问题反馈
 
@@ -447,6 +499,6 @@ export default class Simple extends Component {
 
 
 ### 参考
-[taro-canvas](https://github.com/chuyun/taro-canvas)
-[wxa-plugin-canvas](https://github.com/jasondu/wxa-plugin-canvas)
-[轻松生成小程序分享海报](https://juejin.cn/post/6844903663840788493)
+- [taro-plugin-canvas](https://github.com/chuyun/taro-plugin-canvas)
+- [wxa-plugin-canvas](https://github.com/jasondu/wxa-plugin-canvas)
+- [轻松生成小程序分享海报](https://juejin.cn/post/6844903663840788493)

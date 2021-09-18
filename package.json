@@ -9,7 +9,7 @@
   "common": "dist/index.js",
   "browser": "dist/index.umd.js",
   "module": "dist/index.esm.js",
-  "typings": "./typings/index.d.ts",
+  "types": "types/index.d.ts",
   "files": [
     "lib",
     "dist",
@@ -36,10 +36,10 @@
   ],
   "peerDependencies": {
     "@babel/runtime": "^7.7.7",
-    "@tarojs/components": "3.3.7",
-    "@tarojs/react": "3.3.7",
-    "@tarojs/runtime": "3.3.7",
-    "@tarojs/taro": "3.3.7",
+    "@tarojs/components": "^3.3.7",
+    "@tarojs/react": "^3.3.7",
+    "@tarojs/runtime": "^3.3.7",
+    "@tarojs/taro": "^3.3.7",
     "react": "^17.0.0",
     "react-dom": "^17.0.0"
   },

@@ -81,12 +81,12 @@ export function _getTextWidth (text, drawOptions) {
   */
 export function _drawSingleText (drawData, drawOptions) {
   const {
-    x,
-    y,
+    x = 0,
+    y = 0,
     text,
     color,
     width,
-    fontSize,
+    fontSize = 28,
     baseLine = 'top',
     textAlign = 'left',
     opacity = 1,

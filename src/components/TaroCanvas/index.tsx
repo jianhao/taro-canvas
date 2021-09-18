@@ -1,7 +1,7 @@
 import Taro from '@tarojs/taro'
 import React, { useEffect } from 'react'
 import { Canvas } from '@tarojs/components'
-import { Image } from './types'
+import { Image, DrawConfig } from './types'
 import { drawImage, drawText, drawBlock, drawLine } from './utils/draw'
 import { toPx, toRpx, getRandomId, getImageInfo, getLinearColor } from './utils/tools'
 
@@ -9,8 +9,7 @@ import { toPx, toRpx, getRandomId, getImageInfo, getLinearColor } from './utils/
 import '../../TaroCanvas.css'
 
 export interface CanvasDrawerProps {
-  config?: any
-  debug?: boolean
+  config?: DrawConfig
   showLoading?: boolean
   onCreateSuccess?: (result: any) => void
   onCreateFail?: (result: any) => void
@@ -21,7 +20,6 @@ const canvasId = getRandomId() // 唯一id
 
 const CanvasDrawer: React.FC<CanvasDrawerProps> = ({
     config,
-    debug,
     showLoading,
     onCreateSuccess,
     onCreateFail,
@@ -33,6 +31,7 @@ const CanvasDrawer: React.FC<CanvasDrawerProps> = ({
     texts = [],
     blocks = [],
     lines = [],
+    debug = false,
   } = config || {}
 
   /**
