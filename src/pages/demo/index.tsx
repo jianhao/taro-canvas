@@ -325,7 +325,6 @@ function Index () {
     const { tempFilePath, errMsg } = result
     let msg = '绘制失败'
     setCanvasStatus(false)
-    // setConfig(null)
     msg = '海报绘制出现错误'
     if (errMsg === 'canvasToTempFilePath:ok') {
       setTempImgs([...tempImgs, tempFilePath])

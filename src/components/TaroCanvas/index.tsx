@@ -90,14 +90,12 @@ const CanvasDrawer: React.FC<CanvasDrawerProps> = ({
       Taro.canvasToTempFilePath({
         canvas,
         success: result => {
-          console.log('成功获取图片资源', result);
           Taro.hideLoading()
           if (!onCreateSuccess)console.warn('缺少必传参数 onCreateSuccess')
           onCreateSuccess && onCreateSuccess(result)
         },
         fail: error => {
           const { errMsg } = error
-          console.log(errMsg)
           if (errMsg === 'canvasToTempFilePath:fail:create bitmap failed') {
             count += 1
             if (count <= 3) {
@@ -149,7 +147,6 @@ const CanvasDrawer: React.FC<CanvasDrawerProps> = ({
         item.zIndex = item.zIndex || 0
         return item
       }))
-      console.log('待绘制任务', drawTasks);
 
     queue.sort((a, b) => a.zIndex - b.zIndex) // 按照层叠顺序由低至高排序, 先画低的，再画高的
     for (let i = 0; i < queue.length; i++) {
@@ -169,21 +166,17 @@ const CanvasDrawer: React.FC<CanvasDrawerProps> = ({
         drawLine(queue[i], drawOptions)
       }
     }
-    console.log('绘制完毕');
 
     setTimeout(() => {
       getTempFile(canvas) // 需要做延时才能能正常加载图片
     }, 300)
   }
 
-
-
   return (
     <Canvas
       type='2d'
       id={canvasId}
-      style={`width:${width}px; height:${height}px;`}
-      className={`${debug ? 'debug' : 'pro'} taro_canvas`}
+      style={`height: ${height}rpx; width: ${width}rpx; position: absolute;${debug ? '' : "transform: translate3d(-9999rpx, 0, 0)"}`}
     />
   )
 }
