@@ -7,7 +7,7 @@ taro-canvas 是基于 Taro3 的微信小程序 canvas 绘图组件，封装了�
 
 
 ## 生成效果
-<img width="300" src="http://pic.jianhunxia.com/imgs/20210918103108poster1.png"></img> 
+<img width="300" height="530" src="http://pic.jianhunxia.com/imgs/20210918103108poster1.png"></img> 
 <!-- <img width="300" src="http://pic.jianhunxia.com/imgs/20210918101604taroCanvasImg2.png"></img> -->
 <!-- <img width="300" src="https://github.com/chuyun/taro-canvas/blob/v1/src/assets/images/demo3.png"></img> -->
 
