@@ -84,7 +84,7 @@ export function getRandomId (prefix = 'canvas', length = 10) {
  * @returns { string }
  */
 export function mapHttpToHttps (rawUrl) {
-  if (rawUrl.indexOf(':') < 0) {
+  if (rawUrl.indexOf(':') < 0 || rawUrl.startsWith('http://tmp')) {
     return rawUrl
   }
   const urlComponent = rawUrl.split(':')

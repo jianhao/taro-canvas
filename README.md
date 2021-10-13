@@ -492,8 +492,9 @@ function Index () {
     const newConfig = cloneDeep(defaultConfig)
     newConfig.backgroundColor = currentColor.color
 
-    setCanvasStatus(true)
+    // 注意：必须要先设置 config，再去让组件显示
     setConfig(newConfig)
+    setCanvasStatus(true)
     Taro.showLoading({
       title: '绘制中...',
     })
