@@ -19,11 +19,11 @@ let count = 1
 const canvasId = getRandomId() // 唯一id
 
 const CanvasDrawer: React.FC<CanvasDrawerProps> = ({
-    config,
-    showLoading,
-    onCreateSuccess,
-    onCreateFail,
-  }) => {
+  config,
+  showLoading,
+  onCreateSuccess,
+  onCreateFail,
+}) => {
   const {
     width,
     height,
@@ -79,37 +79,37 @@ const CanvasDrawer: React.FC<CanvasDrawerProps> = ({
 
   useEffect(() => {
     init()
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-    /**
-   * @description 保存绘制的图片
-   * @param  { object } config
-   */
-     const getTempFile = canvas => {
-      Taro.canvasToTempFilePath({
-        canvas,
-        success: result => {
-          Taro.hideLoading()
-          if (!onCreateSuccess)console.warn('缺少必传参数 onCreateSuccess')
-          onCreateSuccess && onCreateSuccess(result)
-        },
-        fail: error => {
-          const { errMsg } = error
-          if (errMsg === 'canvasToTempFilePath:fail:create bitmap failed') {
-            count += 1
-            if (count <= 3) {
-              getTempFile(canvas)
-            } else {
-              Taro.hideLoading()
-              Taro.showToast({ icon: 'none', title: errMsg || '绘制海报失败' })
-              if (!onCreateFail) console.warn('缺少必传参数 onCreateFail')
-              onCreateFail && onCreateFail(error)
-            }
+  /**
+ * @description 保存绘制的图片
+ * @param  { object } config
+ */
+  const getTempFile = canvas => {
+    Taro.canvasToTempFilePath({
+      canvas,
+      success: result => {
+        Taro.hideLoading()
+        if (!onCreateSuccess) console.warn('缺少必传参数 onCreateSuccess')
+        onCreateSuccess && onCreateSuccess(result)
+      },
+      fail: error => {
+        const { errMsg } = error
+        if (errMsg === 'canvasToTempFilePath:fail:create bitmap failed') {
+          count += 1
+          if (count <= 3) {
+            getTempFile(canvas)
+          } else {
+            Taro.hideLoading()
+            Taro.showToast({ icon: 'none', title: errMsg || '绘制海报失败' })
+            if (!onCreateFail) console.warn('缺少必传参数 onCreateFail')
+            onCreateFail && onCreateFail(error)
           }
-        },
-      }, CanvasDrawer)
-    }
+        }
+      },
+    }, CanvasDrawer)
+  }
 
   /**
    * step2: 开始绘制任务
@@ -120,8 +120,14 @@ const CanvasDrawer: React.FC<CanvasDrawerProps> = ({
     // const configHeight = getHeight(config)
     const { ctx, canvas } = await initCanvas()
 
-    canvas.width = width
-    canvas.height = height
+    // 根据设备dpr 自适应提升分辨率
+    const dpr = Taro.getSystemInfoSync().pixelRatio
+    canvas.width = width * dpr;
+    canvas.height = height * dpr;
+    ctx.scale(dpr, dpr)
+
+    // canvas.width = width
+    // canvas.height = height
 
     // 设置画布底色
     if (backgroundColor) {
@@ -131,12 +137,12 @@ const CanvasDrawer: React.FC<CanvasDrawerProps> = ({
       ctx.fillRect(0, 0, width, height) // 填充一个矩形
       ctx.restore() // 恢复之前保存的绘图上下文
     }
-     // 将要画的方块、文字、线条放进队列数组
+    // 将要画的方块、文字、线条放进队列数组
     const queue = drawTasks.concat(texts.map(item => {
-        item.type = 'text'
-        item.zIndex = item.zIndex || 0
-        return item
-      }))
+      item.type = 'text'
+      item.zIndex = item.zIndex || 0
+      return item
+    }))
       .concat(blocks.map(item => {
         item.type = 'block'
         item.zIndex = item.zIndex || 0
