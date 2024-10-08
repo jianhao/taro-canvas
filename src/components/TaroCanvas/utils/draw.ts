@@ -407,7 +407,6 @@ export const drawImage = (data, drawOptions) => new Promise<void>(resolve => {
   if (borderRadius) {
     _drawRadiusRect({ x, y, w, h, r: borderRadius }, drawOptions)
     ctx.clip() // 裁切，后续绘图限制在这个裁切范围内，保证图片圆角
-    ctx.fill()
     const img = canvas.createImage() // 创建图片对象
     img.src = imgPath
     img.onload = () => {
