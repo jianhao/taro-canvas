@@ -25,8 +25,8 @@ const CanvasDrawer: React.FC<CanvasDrawerProps> = ({
   onCreateFail,
 }) => {
   const {
-    width,
-    height,
+    width = 0,
+    height = 0,
     backgroundColor,
     texts = [],
     blocks = [],
