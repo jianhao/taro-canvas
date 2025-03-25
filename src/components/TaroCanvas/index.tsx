@@ -25,8 +25,8 @@ const CanvasDrawer: React.FC<CanvasDrawerProps> = ({
   onCreateFail,
 }) => {
   const {
-    width,
-    height,
+    width = 0,
+    height = 0,
     backgroundColor,
     texts = [],
     blocks = [],
@@ -53,11 +53,11 @@ const CanvasDrawer: React.FC<CanvasDrawerProps> = ({
     setTimeout(() => {
       const pageInstance = Taro.getCurrentInstance()?.page || {} // 拿到当前页面实例
       const query = Taro.createSelectorQuery().in(pageInstance) // 确定在当前页面内匹配子元素
-      query.select(`#${canvasId}`).fields({ node: true, size: true, context: true }, res => {
-        const canvas = res.node
+      query.select(`#${canvasId}`).node().exec(res => {
+        const canvas = res[0].node
         const ctx = canvas.getContext('2d')
         resolve({ ctx, canvas })
-      }).exec()
+      })
     }, 300)
   })
 

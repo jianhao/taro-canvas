@@ -131,7 +131,7 @@ export const toRpx = (px, factor = getFactor()) => parseInt(String(px / factor),
 export function downImage (url) {
   return new Promise<string>((resolve, reject) => {
     // eslint-disable-next-line no-undef
-    if (/^http/.test(url) && !new RegExp(wx.env.USER_DATA_PATH).test(url)) { // wx.env.USER_DATA_PATH 文件系统中的用户目录路径
+    if (/^http/.test(url) && !new RegExp(Taro.env.USER_DATA_PATH).test(url)) { // Taro.env.USER_DATA_PATH 文件系统中的用户目录路径
       Taro.downloadFile({
         url: mapHttpToHttps(url),
         success: res => {

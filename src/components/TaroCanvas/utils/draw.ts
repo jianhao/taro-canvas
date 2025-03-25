@@ -17,13 +17,47 @@ import { getLinearColor, getTextX, toPx } from './tools'
   */
 export function _drawRadiusRect ( { x, y, w, h, r }, { ctx }) {
   const minSize = Math.min(w, h)
-  if (r > minSize / 2) r = minSize / 2
+  function minR(r1) {
+    if (r1 > minSize / 2) {
+      r1 = minSize / 2
+    }
+    return Math.max(r1, 0)
+  }
+  let ltR = minR(r)
+  let rtR = minR(r)
+  let lbR = minR(r)
+  let rbR = minR(r)
+
+  if (typeof r === 'string') {
+    const rArr = r.trim().split(' ').map(v => Number(v)).filter(v => !Number.isNaN(v))
+    if (rArr.length == 1) {
+        ltR = minR(rArr[0])
+        rtR = minR(rArr[0])
+        lbR = minR(rArr[0])
+        rbR = minR(rArr[0])
+    } else if (rArr.length == 2) {
+        ltR = minR(rArr[0])
+        rtR = minR(rArr[1])
+        lbR = minR(rArr[0])
+        rbR = minR(rArr[1])
+    } else if (rArr.length == 4) {
+        ltR = minR(rArr[0])
+        rtR = minR(rArr[1])
+        lbR = minR(rArr[2])
+        rbR = minR(rArr[3])
+    }
+  }
+
+  if (!ltR && !rtR && !lbR && !rbR) {
+    return
+  }
+
   ctx.beginPath()
-  ctx.moveTo(x + r, y)
-  ctx.arcTo(x + w, y, x + w, y + h, r) // 绘制上边框和右上角弧线
-  ctx.arcTo(x + w, y + h, x, y + h, r) // 绘制右边框和右下角弧线
-  ctx.arcTo(x, y + h, x, y, r) // 绘制下边框和左下角弧线
-  ctx.arcTo(x, y, x + w, y, r) // 绘制左边框和左上角弧线
+  ctx.moveTo(x + ltR, y)
+  ctx.arcTo(x + w, y, x + w, y + h, rtR) // 绘制上边框和右上角弧线
+  ctx.arcTo(x + w, y + h, x, y + h, rbR) // 绘制右边框和右下角弧线
+  ctx.arcTo(x, y + h, x, y, lbR) // 绘制下边框和左下角弧线
+  ctx.arcTo(x, y, x + w, y, ltR) // 绘制左边框和左上角弧线
   ctx.closePath()
 }
 
@@ -311,7 +345,7 @@ export function drawBlock (data, drawOptions) {
     ctx.fillStyle = grd
 
     // 画圆角矩形
-    if (borderRadius > 0) {
+    if (borderRadius) {
       const drawData = { x, y, w: blockWidth, h: height, r: borderRadius }
       _drawRadiusRect(drawData, drawOptions)
       ctx.fill() // 填充路径
@@ -324,7 +358,7 @@ export function drawBlock (data, drawOptions) {
   if (borderWidth) {
     ctx.strokeStyle = borderColor
     ctx.lineWidth = borderWidth
-    if (borderRadius > 0) {
+    if (borderRadius) {
       // 画圆角矩形边框
       const drawData = { x, y, w: blockWidth, h: height, r: borderRadius }
       _drawRadiusRect(drawData, drawOptions)
@@ -370,10 +404,9 @@ export const drawImage = (data, drawOptions) => new Promise<void>(resolve => {
     borderColor,
   } = data
   ctx.save()
-  if (borderRadius > 0) {
+  if (borderRadius) {
     _drawRadiusRect({ x, y, w, h, r: borderRadius }, drawOptions)
     ctx.clip() // 裁切，后续绘图限制在这个裁切范围内，保证图片圆角
-    ctx.fill()
     const img = canvas.createImage() // 创建图片对象
     img.src = imgPath
     img.onload = () => {
